@@ -11,7 +11,10 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	std::cout << "Hi" << std::endl;
 
-	d3c_init();
+	auto error = d3c_init();
+
+	if(error)
+		std::cerr << "Error #" << error->num << ": " << error->message << std::endl;
 
 	return 0;
 }

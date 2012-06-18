@@ -57,7 +57,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)..\Libraries\llvm-3.1\build\lib\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LLVMX86CodeGen.lib;LLVMX86AsmParser.lib;LLVMX86Disassembler.lib;LLVMAsmPrinter.lib;LLVMSelectionDAG.lib;LLVMX86Desc.lib;LLVMMCParser.lib;LLVMCodeGen.lib;LLVMX86AsmPrinter.lib;LLVMX86Info.lib;LLVMScalarOpts.lib;LLVMX86Utils.lib;LLVMInstCombine.lib;LLVMTransformUtils.lib;LLVMipa.lib;LLVMAnalysis.lib;LLVMTarget.lib;LLVMCore.lib;LLVMMC.lib;LLVMObject.lib;LLVMSupport.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>LLVMJIT.lib;LLVMExecutionEngine.lib;LLVMBitReader.lib;LLVMX86CodeGen.lib;LLVMX86AsmParser.lib;LLVMX86Disassembler.lib;LLVMAsmPrinter.lib;LLVMSelectionDAG.lib;LLVMX86Desc.lib;LLVMMCParser.lib;LLVMCodeGen.lib;LLVMX86AsmPrinter.lib;LLVMX86Info.lib;LLVMScalarOpts.lib;LLVMX86Utils.lib;LLVMInstCombine.lib;LLVMTransformUtils.lib;LLVMipa.lib;LLVMAnalysis.lib;LLVMTarget.lib;LLVMCore.lib;LLVMMC.lib;LLVMObject.lib;LLVMSupport.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -73,12 +73,14 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)..\Libraries\llvm-3.1\build\lib\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LLVMX86CodeGen.lib;LLVMX86AsmParser.lib;LLVMX86Disassembler.lib;LLVMAsmPrinter.lib;LLVMSelectionDAG.lib;LLVMX86Desc.lib;LLVMMCParser.lib;LLVMCodeGen.lib;LLVMX86AsmPrinter.lib;LLVMX86Info.lib;LLVMScalarOpts.lib;LLVMX86Utils.lib;LLVMInstCombine.lib;LLVMTransformUtils.lib;LLVMipa.lib;LLVMAnalysis.lib;LLVMTarget.lib;LLVMCore.lib;LLVMMC.lib;LLVMObject.lib;LLVMSupport.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>LLVMJIT.lib;LLVMExecutionEngine.lib;LLVMBitReader.lib;LLVMX86CodeGen.lib;LLVMX86AsmParser.lib;LLVMX86Disassembler.lib;LLVMAsmPrinter.lib;LLVMSelectionDAG.lib;LLVMX86Desc.lib;LLVMMCParser.lib;LLVMCodeGen.lib;LLVMX86AsmPrinter.lib;LLVMX86Info.lib;LLVMScalarOpts.lib;LLVMX86Utils.lib;LLVMInstCombine.lib;LLVMTransformUtils.lib;LLVMipa.lib;LLVMAnalysis.lib;LLVMTarget.lib;LLVMCore.lib;LLVMMC.lib;LLVMObject.lib;LLVMSupport.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="d3c.h" />
     <ClInclude Include=".\shade.hpp" />
+    <ClInclude Include="emitter.hpp" />
+    <ClInclude Include="memory-manager.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -90,6 +92,8 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include=".\shade.cpp" />
+    <ClCompile Include="emitter.cpp" />
+    <ClCompile Include="memory-manager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
