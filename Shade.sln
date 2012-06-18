@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Shade", "Shade.vcxproj", "{C4CB0C18-F5EA-43F9-AC8E-24119202EBC5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Bot", "Bot\Bot.vcxproj", "{7EE4C97B-5CAC-4178-A4EA-C918E00A88D2}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C4CB0C18-F5EA-43F9-AC8E-24119202EBC5} = {C4CB0C18-F5EA-43F9-AC8E-24119202EBC5}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7EE4C97B-5CAC-4178-A4EA-C918E00A88D2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7EE4C97B-5CAC-4178-A4EA-C918E00A88D2}.Debug|Win32.Build.0 = Debug|Win32
+		{7EE4C97B-5CAC-4178-A4EA-C918E00A88D2}.Release|Win32.ActiveCfg = Release|Win32
+		{7EE4C97B-5CAC-4178-A4EA-C918E00A88D2}.Release|Win32.Build.0 = Release|Win32
+		{C4CB0C18-F5EA-43F9-AC8E-24119202EBC5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C4CB0C18-F5EA-43F9-AC8E-24119202EBC5}.Debug|Win32.Build.0 = Debug|Win32
+		{C4CB0C18-F5EA-43F9-AC8E-24119202EBC5}.Release|Win32.ActiveCfg = Release|Win32
+		{C4CB0C18-F5EA-43F9-AC8E-24119202EBC5}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
