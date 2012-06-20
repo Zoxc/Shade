@@ -11,15 +11,8 @@ extern "C" {
 
 #define D3C_API __cdecl
 
-typedef enum d3c_error_type
-{
-	D3C_SUCCESS,
-	D3C_LLVM,
-} d3c_error_type_t;
-
 typedef struct d3c_error
 {
-	enum d3c_error_type num;
 	const char *message;
 } *d3c_error_t;
 

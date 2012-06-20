@@ -49,13 +49,27 @@ void *Engine::getPointerToFunction(Function *F)
     return Addr;
   }
 
-  report_fatal_error("Unknown function");
+  throw error((StringRef("Unable to find function: ") + F->getName()).str());
 }
+
+std::vector<std::string> Engine::modules;
 
 void *Engine::getPointerToNamedFunction(const std::string &Name, bool AbortOnFailure)
 {
+	for(auto i = modules.begin(); i != modules.end(); ++i)
+	{
+		HMODULE module = GetModuleHandleA(i->c_str());
+
+		if(!module)
+			win32_error("Unable to get module handle of '" + *i + "'");
+
+		void *result = GetProcAddress(module, Name.c_str());
+
+		if(result)
+			return result;
+	}
   if(AbortOnFailure)
-	report_fatal_error("External function");
+	  throw error("Linking error: Unknown external function '" + Name + "'");
 
   return 0;
 }

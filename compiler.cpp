@@ -3,6 +3,7 @@
 #include "disassembler.hpp"
 #include "emitter.hpp"
 #include "engine.hpp"
+#include "remote-heap.hpp"
 
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
@@ -23,8 +24,15 @@
 
 using namespace llvm;
 
+Shade::RemoteHeap code_section(PAGE_EXECUTE_READ);
+Shade::RemoteHeap data_section(PAGE_READWRITE);
+
 void Shade::compile_module()
 {
+	Engine::modules.push_back("user32.dll");
+	Engine::modules.push_back("kernel32.dll");
+	Engine::modules.push_back("ntdll.dll");
+
 	InitializeNativeTarget();
 
 	DebugFlag = true;
@@ -33,7 +41,7 @@ void Shade::compile_module()
 		
 	LLVM_ERROR(MemoryBuffer::getFile("external.bc", buffer));
 
-	OwningPtr<Module> module(ParseBitcodeFile(buffer.get(), getGlobalContext()));
+	Module *module = ParseBitcodeFile(buffer.get(), getGlobalContext());
 	auto &functions = module->getFunctionList();
 
 	ConstantInt *number = ConstantInt::get(getGlobalContext(), APInt(32, rand()));
@@ -52,7 +60,7 @@ void Shade::compile_module()
 
 	module->dump();
 
-	EngineBuilder engine_builder(module.get());
+	EngineBuilder engine_builder(module);
 
 	engine_builder.setEngineKind(EngineKind::JIT);
 	engine_builder.setRelocationModel(Reloc::Static);
@@ -61,12 +69,12 @@ void Shade::compile_module()
 	
 	OwningPtr<TargetMachine> target(engine_builder.selectTarget());
 
-	FunctionPassManager pass_manager(module.get());
+	FunctionPassManager pass_manager(module);
 
 	pass_manager.add(new TargetData(*target->getTargetData()));
 	
-	Engine engine(module.get(), *target->getTargetData());
-	Emitter emitter(engine, *target);
+	Engine engine(module, *target->getTargetData());
+	Emitter emitter(engine, *target, code_section, data_section);
 
 	if(target->addPassesToEmitMachineCode(pass_manager, emitter))
 	{
@@ -79,4 +87,8 @@ void Shade::compile_module()
 	}
 
 	emitter.resolveRelocations();
+
+	auto init = (void (*)())engine.getPointerToFunction(module->getFunction("init"));
+
+	init();
 }

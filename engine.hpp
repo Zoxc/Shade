@@ -18,13 +18,15 @@ namespace Shade
 {
   class Engine : public llvm::ExecutionEngine {
 public:
+	static std::vector<std::string> modules;
+
 	Engine(llvm::Module *m, const llvm::TargetData &td);
 	~Engine() {}
 
   /// @name ExecutionEngine interface implementation
   /// @{
 
-  llvm::DenseMap<llvm::Function*, void *> FunctionMap;
+  llvm::DenseMap<const llvm::Function*, void *> FunctionMap;
   
   /// runFunction - Execute the specified function with the specified arguments,
   /// and return the result.

@@ -17,6 +17,7 @@ namespace llvm
 namespace Shade
 {
 	class Engine;
+	class RemoteHeap;
 
   class Emitter : public llvm::JITCodeEmitter {
     // When reattempting to JIT a function after running out of space, we store
@@ -53,19 +54,27 @@ namespace Shade
     /// LabelLocations - This vector is a mapping from Label ID's to their
     /// address.
     llvm::DenseMap<llvm::MCSymbol*, size_t> LabelLocations;
+	
+	llvm::DenseMap<llvm::GlobalValue *, void *> IndirectSymMap;
+
+	size_t code_size;
 
 	Engine &engine;
 
-	llvm::SmallVector<char, 4096> Globals;
+	RemoteHeap &code_section;
+	RemoteHeap &data_section;
 
     struct EmittedCode {
 	  const llvm::Function *Function;
       void *FunctionBody;  // Beginning of the function's allocation.
+      void *AlignedStart;
       void *Code;  // The address the function's code actually starts at.
+	  void *End;
+	  void *Target;
 	  size_t Size;
       std::vector<llvm::MachineRelocation> Relocations;
 
-      EmittedCode() : FunctionBody(0), Code(0) {}
+      EmittedCode() : FunctionBody(0), Code(0), Target(0), End(0), AlignedStart(0) {}
     };
     struct EmittedFunctionConfig : public llvm::ValueMapConfig<const llvm::Function*> {
       typedef Emitter *ExtraData;
@@ -77,7 +86,7 @@ namespace Shade
 	
 	EmittedCode *CurrentCode;
 
-	llvm::ValueMap<const llvm::GlobalValue *, uintptr_t> GlobalOffsets;
+	llvm::ValueMap<const llvm::GlobalValue *, void *> GlobalOffsets;
 
 	llvm::TargetMachine &TM;
 	const llvm::TargetData &TD;
@@ -115,11 +124,12 @@ namespace Shade
 
 	void *getGlobalAddress(const llvm::GlobalValue *V);
 	void *getGlobalVariableAddress(const llvm::GlobalVariable *V);
+	void *getGlobalValueIndirectSym(llvm::GlobalValue *GV, void *GVAddress);
   public:
-    Emitter(Engine &engine, llvm::TargetMachine &TM);
+    Emitter(Engine &engine, llvm::TargetMachine &TM, RemoteHeap &code_section, RemoteHeap &data_section);
     ~Emitter() {
     }
-
+	
     /// classof - Methods for support type inquiry through isa, cast, and
     /// dyn_cast:
     ///
@@ -127,7 +137,7 @@ namespace Shade
 
     virtual void startFunction(llvm::MachineFunction &F);
     virtual bool finishFunction(llvm::MachineFunction &F);
-
+	
 	void resolveRelocations();
 
     void emitConstantPool(llvm::MachineConstantPool *MCP);
@@ -153,7 +163,8 @@ namespace Shade
 
     virtual uintptr_t getConstantPoolEntryAddress(unsigned Entry) const;
     virtual uintptr_t getJumpTableEntryAddress(unsigned Entry) const;
-
+	
+	uintptr_t getMachineBasicBlockAddress(int index) const;
     virtual uintptr_t getMachineBasicBlockAddress(llvm::MachineBasicBlock *MBB) const;
 
     /// retryWithMoreMemory - Log a retry and deallocate all memory for the

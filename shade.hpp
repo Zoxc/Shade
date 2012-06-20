@@ -10,13 +10,20 @@
 #include <windows.h>
 
 #include <cstdlib>
+#include <string>
 
 #define D3C_EXPORTS
 #include "d3c.h"
 
 namespace Shade
 {
-	d3c_error_t error(d3c_error_type_t error, const char *message);
+	extern HANDLE process;
+	
+	void write(void *remote, const void *local, size_t size);
+	void read(const void *remote, void *local, size_t size);
+	
+	void win32_error(std::string message);
+	d3c_error_t error(std::string message);
 
-	#define LLVM_ERROR(expr) do { auto error = (expr); if(error.value()) throw Shade::error(D3C_LLVM, error.message().c_str()); } while(0)
+	#define LLVM_ERROR(expr) do { auto error = (expr); if(error.value()) throw Shade::error(std::string("LLVM Error: ") + error.message().c_str()); } while(0)
 };

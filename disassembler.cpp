@@ -33,7 +33,7 @@ void Shade::disassemble_code(void *code, void *target, size_t size)
 
 		byte *next = decode_from_copy(0, pos, (byte *)target + (pos - (byte *)code), &instr);
 
-		print_instr(pos, &instr);
+		print_instr(pos - (byte *)code + (byte *)target, &instr);
 
 		pos = next;
 

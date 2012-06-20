@@ -15,6 +15,7 @@
 #include "emitter.hpp"
 #include "engine.hpp"
 #include "disassembler.hpp"
+#include "remote-heap.hpp"
 
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/Constants.h"
@@ -67,8 +68,8 @@ static bool isNonGhostDeclaration(const Function *F) {
 
 namespace Shade
 {
-Emitter::Emitter(Engine &engine, llvm::TargetMachine &TM)
-	: SizeEstimate(0), engine(engine), TM(TM), TD(*TM.getTargetData()),
+Emitter::Emitter(Engine &engine, llvm::TargetMachine &TM, RemoteHeap &code_section, RemoteHeap &data_section)
+	: SizeEstimate(0), code_size(0), engine(engine), TM(TM), code_section(code_section), data_section(data_section), TD(*TM.getTargetData()),
     EmittedFunctions(this) {
 }
 void Emitter::addRelocation(const MachineRelocation &MR) {
@@ -85,10 +86,16 @@ void Emitter::StartMachineBasicBlock(MachineBasicBlock *MBB) {
                 << (void*) getCurrentPCValue() << "]\n");
 }
 
+uintptr_t Emitter::getMachineBasicBlockAddress(int index) const{
+    assert(MBBLocations.size() > (unsigned)index &&
+            MBBLocations[index] && "MBB not emitted!");
+    assert(CurrentCode->Target && "Target not emitted!");
+
+    return (uintptr_t)CurrentCode->Target + MBBLocations[index] - (uintptr_t)CurrentCode->AlignedStart;
+}
+
 uintptr_t Emitter::getMachineBasicBlockAddress(MachineBasicBlock *MBB) const{
-    assert(MBBLocations.size() > (unsigned)MBB->getNumber() &&
-            MBBLocations[MBB->getNumber()] && "MBB not emitted!");
-    return MBBLocations[MBB->getNumber()];
+	return getMachineBasicBlockAddress(MBB->getNumber());
 }
 
 void Emitter::emitLabel(MCSymbol *Label) {
@@ -104,13 +111,12 @@ uintptr_t Emitter::getLabelAddress(MCSymbol *Label) const {
     return LabelLocations.find(Label)->second;
 }
 
-
 void *Emitter::getGlobalVariableAddress(const GlobalVariable *V)
 {
 	auto result = GlobalOffsets.find(V);
 
 	if(result != GlobalOffsets.end())
-		return (void *)(result->second | 0xDA000000);
+		return (void *)result->second;
 	
 	// If the global is external, just remember the address.
 	if (V->isDeclaration() || V->hasAvailableExternallyLinkage()) {
@@ -124,18 +130,19 @@ void *Emitter::getGlobalVariableAddress(const GlobalVariable *V)
 	size_t S = TD.getTypeAllocSize(GlobalType);
 	size_t A = TD.getPreferredAlignment(V);
 
-	size_t offset = RoundUpToAlignment(Globals.size(), A);
-	
-	Globals.set_size(offset + S);
+	void *remote = data_section.allocate(S, NextPowerOf2(A - 1));
+	void *local = alloca(S);
 
-	memset(&Globals[offset], 0, S);
+	memset(local, 0, S);
 	
 	if (!V->isThreadLocal())
-		engine.InitializeMemory(V->getInitializer(), &Globals[offset]);
+		engine.InitializeMemory(V->getInitializer(), local);
 
-	GlobalOffsets[V] = offset;
+	write(remote, local, S);
 
-	return (void *)(offset | 0xDA000000);
+	GlobalOffsets[V] = remote;
+
+	return remote;
 }
 
 void *Emitter::getGlobalAddress(const GlobalValue *V)
@@ -143,7 +150,7 @@ void *Emitter::getGlobalAddress(const GlobalValue *V)
 	auto result = GlobalOffsets.find(V);
 
 	if(result != GlobalOffsets.end())
-		return (void *)(result->second | 0xDA000000);
+		return result->second;
 
 	llvm_unreachable("Global hasn't had an address allocated yet!");
 }
@@ -162,28 +169,41 @@ void *Emitter::getPointerToGlobal(GlobalValue *V, void *Reference,
   // If we have already compiled the function, return a pointer to its body.
   Function *F = cast<Function>(V);
 
-  // If we know the target can handle arbitrary-distance calls, try to
-  // return a direct pointer.
-  if (!MayNeedFarStub) {
-    // If we have code, go ahead and return that.
-    //void *ResultPtr = TheJIT->getPointerToGlobalIfAvailable(F);
-   // if (ResultPtr) return ResultPtr;
+  auto fresult = EmittedFunctions.find(F);
 
-    // If this is an external function pointer, we can force the JIT to
-    // 'compile' it, which really just adds it to the map.
-   // if (isNonGhostDeclaration(F) || F->hasAvailableExternallyLinkage())
-   //   return TheJIT->getPointerToFunction(F);
-  }
+  if(fresult != EmittedFunctions.end())
+	  return fresult->second.Target;
 
-  return 0;
+  return engine.getPointerToFunction(F);
+}
+
+void *Emitter::getGlobalValueIndirectSym(GlobalValue *GV, void *GVAddress) {
+  // If we already have a stub for this global variable, recycle it.
+	auto gresult = IndirectSymMap.find(GV);
+
+	if(gresult != IndirectSymMap.end())
+		return gresult->second;
+
+	size_t size = sizeof(void *);
+	
+	void *remote = data_section.allocate(size, size);
+	void **local = (void **)alloca(size);
+
+	*local = GVAddress;
+
+	write(remote, local, size);
+
+	IndirectSymMap[GV] = remote;
+
+	return remote;
 }
 
 void *Emitter::getPointerToGVIndirectSym(GlobalValue *V, void *Reference) {
   // Make sure GV is emitted first, and create a stub containing the fully
   // resolved address.
   void *GVAddress = getPointerToGlobal(V, Reference, false);
-  //void *StubAddr = Resolver.getGlobalValueIndirectSym(V, GVAddress);
-  return GVAddress;//StubAddr;
+  void *StubAddr = getGlobalValueIndirectSym(V, GVAddress);
+  return StubAddr;
 }
 
 void Emitter::processDebugLoc(DebugLoc DL, bool BeforePrintingInsn) {
@@ -228,6 +248,8 @@ void Emitter::startFunction(MachineFunction &F) {
 
   // Ensure the constant pool/jump table info is at least 4-byte aligned.
   emitAlignment(16);
+  
+  code.AlignedStart = CurBufferPtr;
 
   emitConstantPool(F.getConstantPool());
   if (MachineJumpTableInfo *MJTI = F.getJumpTableInfo())
@@ -252,8 +274,6 @@ bool Emitter::finishFunction(MachineFunction &F) {
   if (MachineJumpTableInfo *MJTI = F.getJumpTableInfo())
     emitJumpTableInfo(MJTI);
 
-  CurrentCode->Size = CurBufferPtr - (uint8_t *)CurrentCode->Code;
-
   // CurBufferPtr may have moved beyond FnEnd, due to memory allocation for
   // global variables that were referenced in the relocations.
   endFunctionBody(F.getFunction(), BufferBegin, CurBufferPtr);
@@ -266,15 +286,29 @@ bool Emitter::finishFunction(MachineFunction &F) {
     // SizeEstimate back down to zero.
     SizeEstimate = 0;
   }
+  
+  CurrentCode->End = CurBufferPtr;
+  CurrentCode->Size = CurBufferPtr - (uint8_t *)CurrentCode->AlignedStart;
+  CurrentCode->Target = code_section.allocate(CurrentCode->Size, 16);
+
+  engine.FunctionMap[CurrentCode->Function] = CurrentCode->Target;
 
   BufferBegin = CurBufferPtr = 0;
 
   DEBUG(dbgs() << "JIT: Finished CodeGen of [" << (void*)CurrentCode->Code
         << "] Function: " << F.getFunction()->getName()
-        << ": " << (CurrentCode->Size) << " bytes of text, "
+		<< ": " << (CurrentCode->Size) << " bytes of text, "
         << CurrentCode->Relocations.size() << " relocations\n");
 
   ConstPoolAddresses.clear();
+
+	for (unsigned i = 0, e = CurrentCode->Relocations.size(); i != e; ++i)
+	{
+		MachineRelocation &MR = CurrentCode->Relocations[i];
+
+		if(MR.isBasicBlock())
+			CurrentCode->Relocations[i] = MachineRelocation::getBB(MR.getMachineCodeOffset(), MR.getRelocationType(), (llvm::MachineBasicBlock *)MR.getBasicBlock()->getNumber(), MR.getConstantVal());
+	}
 
   return false;
 }
@@ -283,10 +317,12 @@ void Emitter::resolveRelocations()
 {
 	for(auto code = EmittedFunctions.begin(); code != EmittedFunctions.end(); ++code)
 	{
-		if (!code->second.Relocations.empty()) {
+		CurrentCode = &code->second;
+
+		if (!CurrentCode->Relocations.empty()) {
 		// Resolve the relocations to concrete pointers.
-		for (unsigned i = 0, e = code->second.Relocations.size(); i != e; ++i) {
-		  MachineRelocation &MR = code->second.Relocations[i];
+		for (unsigned i = 0, e = CurrentCode->Relocations.size(); i != e; ++i) {
+		  MachineRelocation &MR = CurrentCode->Relocations[i];
 		  void *ResultPtr = 0;
 		  if (!MR.letTargetResolve()) {
 			if (MR.isExternalSymbol()) {
@@ -302,7 +338,7 @@ void Emitter::resolveRelocations()
 			  ResultPtr = getPointerToGVIndirectSym(
 				  MR.getGlobalValue(), BufferBegin+MR.getMachineCodeOffset());
 			} else if (MR.isBasicBlock()) {
-			  ResultPtr = (void*)getMachineBasicBlockAddress(MR.getBasicBlock());
+			  ResultPtr = (void*)getMachineBasicBlockAddress((int)MR.getBasicBlock());
 			} else if (MR.isConstantPoolIndex()) {
 			  ResultPtr =
 				(void*)getConstantPoolEntryAddress(MR.getConstantPoolIndex());
@@ -311,14 +347,22 @@ void Emitter::resolveRelocations()
 			  ResultPtr=(void*)getJumpTableEntryAddress(MR.getJumpTableIndex());
 			}
 
+			if(MR.getRelocationType() == 0) // X86::reloc_pcrel_word
+			{
+				uintptr_t offset = (uintptr_t)CurrentCode->AlignedStart - (uintptr_t)CurrentCode->FunctionBody;
+				uintptr_t fake_remote = (uintptr_t)CurrentCode->Target - offset;
+				ResultPtr = (void *)((uintptr_t)ResultPtr + (uintptr_t)CurrentCode->FunctionBody - fake_remote);
+			}
+
 			MR.setResultPointer(ResultPtr);
 		  }
 		}
 
-		TM.getJITInfo()->relocate(code->second.FunctionBody, &code->second.Relocations[0], code->second.Relocations.size(), nullptr);
+		TM.getJITInfo()->relocate(CurrentCode->FunctionBody, &CurrentCode->Relocations[0], CurrentCode->Relocations.size(), nullptr);
 	  }
 
-	  Shade::disassemble_code(code->second.Code, code->second.Code, code->second.Size);
+		Shade::disassemble_code(CurrentCode->Code, (uint8_t *)CurrentCode->Target + ((uint8_t *)CurrentCode->Code - (uint8_t *)CurrentCode->AlignedStart), (uint8_t *)CurrentCode->End - (uint8_t *)CurrentCode->Code);
+		write(CurrentCode->Target, CurrentCode->AlignedStart, CurrentCode->Size);
 	}
 }
 
@@ -351,8 +395,9 @@ void *Emitter::allocateSpace(uintptr_t Size, unsigned Alignment) {
   // create a new memory block if there is no active one.
   // care must be taken so that BufferBegin is invalidated when a
   // block is trimmed
-  BufferBegin = CurBufferPtr = memAllocateSpace(Size, Alignment);
-  BufferEnd = BufferBegin+Size;
+  BufferBegin = CurBufferPtr = (uint8_t *)malloc(Size + Alignment);
+  BufferEnd = BufferBegin + Size;
+  emitAlignment(Alignment);
   return CurBufferPtr;
 }
 
@@ -514,7 +559,7 @@ uintptr_t Emitter::getJumpTableEntryAddress(unsigned Index) const {
 uint8_t *Emitter::startFunctionBody(const Function *F, uintptr_t &ActualSize)
 {
 	if(ActualSize == 0)
-		ActualSize = 0x1000;
+		ActualSize = 0x100;
 
 	void *result = std::malloc(ActualSize);
 
