@@ -62,10 +62,6 @@ static bool isNonGhostDeclaration(const Function *F) {
   return F->isDeclaration() && !F->isMaterializable();
 }
 
-//===----------------------------------------------------------------------===//
-// JIT lazy compilation code.
-//
-
 namespace Shade
 {
 Emitter::Emitter(Engine &engine, llvm::TargetMachine &TM, RemoteHeap &code_section, RemoteHeap &data_section)
@@ -78,20 +74,20 @@ void Emitter::addRelocation(const MachineRelocation &MR) {
 
 void Emitter::StartMachineBasicBlock(MachineBasicBlock *MBB) {
 	MBB->getBasicBlock();
-    if (MBBLocations.size() <= (unsigned)MBB->getNumber())
-    MBBLocations.resize((MBB->getNumber()+1)*2);
-    MBBLocations[MBB->getNumber()] = getCurrentPCValue();
+    if (CurrentCode->MBBLocations.size() <= (unsigned)MBB->getNumber())
+    CurrentCode->MBBLocations.resize((MBB->getNumber()+1)*2);
+    CurrentCode->MBBLocations[MBB->getNumber()] = getCurrentPCValue();
 
     DEBUG(dbgs() << "JIT: Emitting BB" << MBB->getNumber() << " at ["
                 << (void*) getCurrentPCValue() << "]\n");
 }
 
 uintptr_t Emitter::getMachineBasicBlockAddress(int index) const{
-    assert(MBBLocations.size() > (unsigned)index &&
-            MBBLocations[index] && "MBB not emitted!");
+    assert(CurrentCode->MBBLocations.size() > (unsigned)index &&
+            CurrentCode->MBBLocations[index] && "MBB not emitted!");
     assert(CurrentCode->Target && "Target not emitted!");
 
-    return (uintptr_t)CurrentCode->Target + MBBLocations[index] - (uintptr_t)CurrentCode->AlignedStart;
+    return (uintptr_t)CurrentCode->Target + CurrentCode->MBBLocations[index] - (uintptr_t)CurrentCode->AlignedStart;
 }
 
 uintptr_t Emitter::getMachineBasicBlockAddress(MachineBasicBlock *MBB) const{
@@ -152,7 +148,7 @@ void *Emitter::getGlobalAddress(const GlobalValue *V)
 	if(result != GlobalOffsets.end())
 		return result->second;
 
-	llvm_unreachable("Global hasn't had an address allocated yet!");
+	report_fatal_error("Global hasn't had an address allocated yet!");
 }
 
 //===----------------------------------------------------------------------===//
@@ -252,14 +248,13 @@ void Emitter::startFunction(MachineFunction &F) {
   code.AlignedStart = CurBufferPtr;
 
   emitConstantPool(F.getConstantPool());
+
   if (MachineJumpTableInfo *MJTI = F.getJumpTableInfo())
     initJumpTableInfo(MJTI);
 
   // About to start emitting the machine code for the function.
   emitAlignment(std::max(F.getFunction()->getAlignment(), 8U));
   code.Code = CurBufferPtr;
-
-  MBBLocations.clear();
 }
 
 bool Emitter::finishFunction(MachineFunction &F) {
@@ -271,29 +266,22 @@ bool Emitter::finishFunction(MachineFunction &F) {
     return true;
   }
 
-  if (MachineJumpTableInfo *MJTI = F.getJumpTableInfo())
-    emitJumpTableInfo(MJTI);
-
-  // CurBufferPtr may have moved beyond FnEnd, due to memory allocation for
-  // global variables that were referenced in the relocations.
   endFunctionBody(F.getFunction(), BufferBegin, CurBufferPtr);
 
-  if (CurBufferPtr == BufferEnd) {
-    retryWithMoreMemory(F);
-    return true;
-  } else {
-    // Now that we've succeeded in emitting the function, reset the
-    // SizeEstimate back down to zero.
-    SizeEstimate = 0;
-  }
+	// Now that we've succeeded in emitting the function, reset the
+	// SizeEstimate back down to zero.
+	SizeEstimate = 0;
   
   CurrentCode->End = CurBufferPtr;
   CurrentCode->Size = CurBufferPtr - (uint8_t *)CurrentCode->AlignedStart;
   CurrentCode->Target = code_section.allocate(CurrentCode->Size, 16);
 
-  engine.FunctionMap[CurrentCode->Function] = CurrentCode->Target;
+  engine.FunctionMap[CurrentCode->Function] = (void *)((uintptr_t)CurrentCode->Target + (uintptr_t)CurrentCode->Code - (uintptr_t)CurrentCode->AlignedStart);
 
   BufferBegin = CurBufferPtr = 0;
+  
+  if (MachineJumpTableInfo *MJTI = F.getJumpTableInfo())
+    emitJumpTableInfo(MJTI);
 
   DEBUG(dbgs() << "JIT: Finished CodeGen of [" << (void*)CurrentCode->Code
         << "] Function: " << F.getFunction()->getName()
@@ -514,7 +502,7 @@ void Emitter::emitJumpTableInfo(MachineJumpTableInfo *MJTI) {
     break;
   }
   case MachineJumpTableInfo::EK_GPRel64BlockAddress:
-    llvm_unreachable(
+    report_fatal_error(
            "JT Info emission not implemented for GPRel64BlockAddress yet.");
   }
 }
@@ -590,7 +578,7 @@ void Emitter::EmittedFunctionConfig::onDelete(
 }
 void Emitter::EmittedFunctionConfig::onRAUW(
   Emitter *, const Function*, const Function*) {
-  llvm_unreachable("The JIT doesn't know how to handle a"
+  report_fatal_error("The JIT doesn't know how to handle a"
                    " RAUW on a value it has emitted.");
 }
 };

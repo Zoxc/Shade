@@ -26,11 +26,6 @@ namespace Shade
     // successfully emit the function, we reset this back to zero.
     uintptr_t SizeEstimate;
 
-    /// MBBLocations - This vector is a mapping from MBB ID's to their address.
-    /// It is filled in by the StartMachineBasicBlock callback and queried by
-    /// the getMachineBasicBlockAddress callback.
-    std::vector<uintptr_t> MBBLocations;
-
     /// ConstantPool - The constant pool for the current function.
     ///
     llvm::MachineConstantPool *ConstantPool;
@@ -73,6 +68,12 @@ namespace Shade
 	  void *Target;
 	  size_t Size;
       std::vector<llvm::MachineRelocation> Relocations;
+	  
+		/// MBBLocations - This vector is a mapping from MBB ID's to their address.
+		/// It is filled in by the StartMachineBasicBlock callback and queried by
+		/// the getMachineBasicBlockAddress callback.
+		std::vector<uintptr_t> MBBLocations;
+
 
       EmittedCode() : FunctionBody(0), Code(0), Target(0), End(0), AlignedStart(0) {}
     };
