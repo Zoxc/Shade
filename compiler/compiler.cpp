@@ -1,4 +1,4 @@
-#include "shade.hpp"
+#include "../shade.hpp"
 #include "compiler.hpp"
 #include "disassembler.hpp"
 #include "emitter.hpp"

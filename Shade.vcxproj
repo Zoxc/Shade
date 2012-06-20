@@ -77,17 +77,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="compiler.hpp" />
+    <ClInclude Include="compiler\compiler.hpp" />
+    <ClInclude Include="compiler\disassembler.hpp" />
+    <ClInclude Include="compiler\emitter.hpp" />
+    <ClInclude Include="compiler\engine.hpp" />
+    <ClInclude Include="compiler\remote-heap.hpp" />
     <ClInclude Include="d3c.h" />
     <ClInclude Include=".\shade.hpp" />
-    <ClInclude Include=".\disassembler.hpp" />
-    <ClInclude Include="emitter.hpp" />
-    <ClInclude Include="engine.hpp" />
-    <ClInclude Include="remote-heap.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include=".\disassembler.cpp" />
-    <ClCompile Include="compiler.cpp" />
+    <ClCompile Include="compiler\compiler.cpp" />
+    <ClCompile Include="compiler\disassembler.cpp" />
+    <ClCompile Include="compiler\emitter.cpp" />
+    <ClCompile Include="compiler\engine.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -97,8 +99,6 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include=".\shade.cpp" />
-    <ClCompile Include="emitter.cpp" />
-    <ClCompile Include="engine.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

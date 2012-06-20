@@ -1,6 +1,6 @@
 #include "shade.hpp"
-#include "compiler.hpp"
-#include "disassembler.hpp"
+#include "compiler/compiler.hpp"
+#include "compiler/disassembler.hpp"
 
 #include <sstream>
 

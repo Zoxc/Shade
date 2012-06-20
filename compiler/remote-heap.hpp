@@ -1,5 +1,5 @@
 #pragma once
-#include "shade.hpp"
+#include "../shade.hpp"
 #include <Prelude/FastList.hpp>
 
 namespace Shade

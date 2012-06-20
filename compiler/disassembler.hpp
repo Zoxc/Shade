@@ -1,6 +1,6 @@
 #pragma once
 
-#include "shade.hpp"
+#include "../shade.hpp"
 
 namespace Shade
 {
