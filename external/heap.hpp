@@ -12,6 +12,8 @@ namespace Shade
 		size_t start;
 	
 		void *allocate(size_t bytes);
+		void setup(void *start, size_t size);
+		void reset();
 	};
 
 	class HeapObject
@@ -31,12 +33,17 @@ namespace Shade
 			return ptr;
 		}
 		
+		T *operator ->()
+		{
+			return get();
+		}
+		
 		operator T *()
 		{
 			return get();
 		}
 		
-		Ptr() : offset(0)
+		Ptr() : offset(-1)
 		{
 		}
 		
@@ -47,12 +54,12 @@ namespace Shade
 		
 		void set(T *ptr)
 		{
-			offset = (size_t)ptr - heap.start;
+			offset = ptr == nullptr ? (size_t)-1 : (size_t)ptr - heap.start;
 		}
 		
 		T *get()
 		{
-			if(offset != 0)
+			if(offset != (size_t)-1)
 				return (T *)(offset + heap.start);
 			else
 				return nullptr;

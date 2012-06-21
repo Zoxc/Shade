@@ -1,14 +1,34 @@
 #include "process.hpp"
+#include "external/heap.hpp"
 #include <shellapi.h>
 
+Shade::Call Shade::call;
 HANDLE Shade::thread;
 HANDLE Shade::process;
-HANDLE Shade::local_event_handle;
-HANDLE Shade::remote_event_handle;
+Shade::Remote Shade::remote;
+Shade::Local Shade::local;
+
+void Shade::allocate_shared_memory()
+{
+	local.memory = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)0x10000, 0); 
+
+	if(!local.memory)
+		win32_error("Unable to create file mapping handle");
+
+	if(!DuplicateHandle(GetCurrentProcess(), local.memory, process, &remote.memory, 0, FALSE, DUPLICATE_SAME_ACCESS))
+		win32_error("Unable to duplicate file mapping handle");
+
+	local.mapping = (uintptr_t)MapViewOfFile(local.memory, FILE_MAP_ALL_ACCESS, 0, 0, 0x1000);
+
+	if(!local.mapping)
+		win32_error("Unable to map view of file");
+	
+	heap.setup((void *)local.mapping, 0);
+}
 
 void Shade::remote_event(void *ip, bool paused)
 {
-	if(!ResetEvent(local_event_handle))
+	if(!ResetEvent(local.event_handle))
 			win32_error("Unable to reset event");
 
 	if(!paused)
@@ -19,7 +39,7 @@ void Shade::remote_event(void *ip, bool paused)
 
 	CONTEXT context;
 
-	context.ContextFlags = CONTEXT_ALL;
+	context.ContextFlags = CONTEXT_FLOATING_POINT | CONTEXT_CONTROL | CONTEXT_INTEGER;
 
 	if(!GetThreadContext(thread, &context))
 		win32_error("Unable to get remote thread context");
@@ -36,7 +56,7 @@ void Shade::remote_event(void *ip, bool paused)
 	if(ResumeThread(thread) == (DWORD)-1)
 		win32_error("Unable to start remote code");
 
-	if(WaitForSingleObject(local_event_handle, INFINITE) == WAIT_FAILED)
+	if(WaitForSingleObject(local.event_handle, INFINITE) == WAIT_FAILED)
 		win32_error("Unable to wait for remote code");
 		
 	if(SuspendThread(thread) == (DWORD)-1)
@@ -70,11 +90,11 @@ void Shade::create_process()
 	process = pi.hProcess;
 	thread = pi.hThread;
 	
-	local_event_handle = CreateEvent(NULL, TRUE, FALSE, NULL);
+	local.event_handle = CreateEvent(NULL, TRUE, FALSE, NULL);
 	
-	if(!local_event_handle)
+	if(!local.event_handle)
 		win32_error("Unable to create event");
 	
-	if(!DuplicateHandle(GetCurrentProcess(), local_event_handle, pi.hProcess, &remote_event_handle, 0, FALSE, DUPLICATE_SAME_ACCESS))
+	if(!DuplicateHandle(GetCurrentProcess(), local.event_handle, pi.hProcess, &remote.event_handle, 0, FALSE, DUPLICATE_SAME_ACCESS))
 		win32_error("Unable to duplicate event handle");
 }

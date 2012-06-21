@@ -9,7 +9,15 @@ namespace Shade
 		
 		auto element = new UIElement;
 		
+		element->value = 34;
+		
 		list->append(element);
+		
+		auto element2 = new UIElement;
+		
+		element2->value = 76;
+		
+		list->append(element2);
 		
 		return list;
 	}

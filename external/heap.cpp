@@ -1,26 +1,41 @@
 #include "heap.hpp"
 
-Shade::Heap Shade::heap;
-
-void *Shade::Heap::allocate(size_t bytes)
+namespace Shade
 {
-	char *result = current;
+	Heap heap;
 
-	char *next = result + bytes;
+	void *Heap::allocate(size_t bytes)
+	{
+		char *result = current;
 
-	if(next > max)
-		return 0;
+		char *next = result + bytes;
 
-	current = next;
+		if(next > max)
+			return 0;
 
-	return (void *)result;
-}
+		current = next;
 
-void *Shade::HeapObject::operator new(size_t bytes)
-{
-	return heap.allocate(bytes);
-}
+		return (void *)result;
+	}
 
-void Shade::HeapObject::operator delete(void *)
-{
-}
+	void Heap::reset()
+	{
+		current = (char *)start;
+	}
+	
+	void Heap::setup(void *start, size_t size)
+	{
+		this->start = (size_t)start;
+		current = (char *)start;
+		max = current + size;
+	}
+	
+	void *HeapObject::operator new(size_t bytes)
+	{
+		return heap.allocate(bytes);
+	}
+
+	void HeapObject::operator delete(void *)
+	{
+	}
+};

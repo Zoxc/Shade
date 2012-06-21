@@ -5,7 +5,6 @@
 #include "emitter.hpp"
 #include "engine.hpp"
 #include "remote-heap.hpp"
-#include "../external/call.hpp"
 
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
@@ -141,15 +140,25 @@ skip_random:
 
 	void *init = engine.getPointerToFunction(module->getFunction("init"));
 
-	Call call;
+	remote.list_ui = engine.getPointerToFunction(module->getFunction("list_ui"));
 
-	call.event = remote_event_handle;
+	call.event = remote.event_handle;
+	call.memory = remote.memory;
 
 	auto call_global = module->getGlobalVariable("_ZN5Shade4callE"); // Shade::call
 
-	void *remote_call = emitter.getGlobalAddress(call_global);
+	remote.call = emitter.getGlobalAddress(call_global);
 
-	write(remote_call, &call, sizeof(Call));
-
+	write(remote.call, &call, sizeof(Call));
+	
 	remote_event(init, true);
+
+	remote_event(remote.list_ui);
+
+	read(remote.call, &call, sizeof(Call));
+
+	for(auto i = call.result.ui_list->begin(); i != call.result.ui_list->end(); ++i)
+	{
+		printf("UIElement: %d\n", i().value);
+	}
 }

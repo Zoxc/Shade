@@ -55,6 +55,7 @@ extern "C" D3C_EXPORT d3c_error_t D3C_API d3c_init()
 	try
 	{
 		Shade::create_process();
+		Shade::allocate_shared_memory();
 
 		Shade::init_disassembler();
 		Shade::compile_module();

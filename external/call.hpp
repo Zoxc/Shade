@@ -10,6 +10,7 @@ namespace Shade
 	{
 	public:
 		HANDLE event;
+		HANDLE memory;
 		
 		struct {
 			Ptr<List<UIElement>> ui_list;
@@ -22,4 +23,4 @@ namespace Shade
 	extern Call call;
 };
 
-#define EXPORT(name, impl, resultvar) extern "C" void __cdecl name(void) { Shade::call.result.resultvar = impl(); Shade::call.done(); }
+#define EXPORT(name, impl, resultvar) extern "C" void __cdecl name(void) { Shade::heap.reset(); Shade::call.result.resultvar = impl(); Shade::call.done(); }
