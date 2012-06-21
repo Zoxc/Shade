@@ -84,6 +84,7 @@
     <ClInclude Include="compiler\remote-heap.hpp" />
     <ClInclude Include="d3c.h" />
     <ClInclude Include=".\shade.hpp" />
+    <ClInclude Include="process.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="compiler\compiler.cpp" />
@@ -99,6 +100,7 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include=".\shade.cpp" />
+    <ClCompile Include="process.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -68,6 +68,8 @@ namespace Shade
 	  void *Target;
 	  size_t Size;
       std::vector<llvm::MachineRelocation> Relocations;
+	  std::vector<size_t> JumpTableOffsets;
+	  unsigned JumpTableEntrySize;
 	  
 		/// MBBLocations - This vector is a mapping from MBB ID's to their address.
 		/// It is filled in by the StartMachineBasicBlock callback and queried by
@@ -176,6 +178,8 @@ namespace Shade
     /// deallocateMemForFunction - Deallocate all memory for the specified
     /// function body.
     void deallocateMemForFunction(const llvm::Function *F);
+	
+	bool earlyResolveAddresses() const { return false; }
 
     virtual void processDebugLoc(llvm::DebugLoc DL, bool BeforePrintingInsn);
 

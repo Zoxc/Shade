@@ -16,7 +16,7 @@ A hm;
 int a = 1;
 int b;
 
-extern "C" void init(int arg)
+extern "C" void __fastcall init(int arg, HANDLE event)
 {
 const char *str = "hm";
 	switch(arg)
@@ -34,4 +34,6 @@ const char *str = "hm";
 	MessageBox(0, str, "test", 0);
 	while(hm.test++ < 4);
 	a = 2;
+	SetEvent(event);
+	while(true);
 }

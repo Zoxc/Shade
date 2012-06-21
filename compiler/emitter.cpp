@@ -348,8 +348,12 @@ void Emitter::resolveRelocations()
 
 		TM.getJITInfo()->relocate(CurrentCode->FunctionBody, &CurrentCode->Relocations[0], CurrentCode->Relocations.size(), nullptr);
 	  }
+		
+		uint8_t *target = (uint8_t *)CurrentCode->Target + ((uint8_t *)CurrentCode->Code - (uint8_t *)CurrentCode->AlignedStart);
 
-		Shade::disassemble_code(CurrentCode->Code, (uint8_t *)CurrentCode->Target + ((uint8_t *)CurrentCode->Code - (uint8_t *)CurrentCode->AlignedStart), (uint8_t *)CurrentCode->End - (uint8_t *)CurrentCode->Code);
+		std::cout << "Function " << CurrentCode->Function->getName().str() << " starting at 0x" << (void *)target << std::endl;
+
+		Shade::disassemble_code(CurrentCode->Code, target, (uint8_t *)CurrentCode->End - (uint8_t *)CurrentCode->Code);
 		write(CurrentCode->Target, CurrentCode->AlignedStart, CurrentCode->Size);
 	}
 }
@@ -417,7 +421,7 @@ void Emitter::emitConstantPool(MachineConstantPool *MCP) {
       report_fatal_error("Initialize memory with machine specific constant pool"
                         "entry has not been implemented!");
     }
-    //TheJIT->InitializeMemory(CPE.Val.ConstVal, (void*)CAddr);
+    engine.InitializeMemory(CPE.Val.ConstVal, (void*)CAddr);
     DEBUG(dbgs() << "JIT:   CP" << i << " at [0x";
           dbgs().write_hex(CAddr) << "]\n");
 
@@ -456,6 +460,10 @@ void Emitter::emitJumpTableInfo(MachineJumpTableInfo *MJTI) {
   const std::vector<MachineJumpTableEntry> &JT = MJTI->getJumpTables();
   if (JT.empty() || JumpTableBase == 0) return;
 
+  CurrentCode->JumpTableEntrySize = JumpTable->getEntrySize(TD);
+
+  for(unsigned i = 0; i < JT.size(); ++i)
+     CurrentCode->JumpTableOffsets.push_back(JT[i].MBBs.size());
 
   switch (MJTI->getEntryKind()) {
   case MachineJumpTableInfo::EK_Inline:
@@ -523,25 +531,26 @@ void *Emitter::allocIndirectGV(const GlobalValue *GV,
 uintptr_t Emitter::getConstantPoolEntryAddress(unsigned ConstantNum) const {
   assert(ConstantNum < ConstantPool->getConstants().size() &&
          "Invalid ConstantPoolIndex!");
-  return ConstPoolAddresses[ConstantNum];
+  assert(CurrentCode->Target && "Target not emitted!");
+  return ConstPoolAddresses[ConstantNum] - (uintptr_t)CurrentCode->AlignedStart + (uintptr_t)CurrentCode->Target;
 }
 
 // getJumpTableEntryAddress - Return the address of the JumpTable with index
 // 'Index' in the jumpp table that was last initialized with 'initJumpTableInfo'
 //
 uintptr_t Emitter::getJumpTableEntryAddress(unsigned Index) const {
-  const std::vector<MachineJumpTableEntry> &JT = JumpTable->getJumpTables();
-  assert(Index < JT.size() && "Invalid jump table index!");
+  assert(CurrentCode->Target && "Target not emitted!");
+  assert(Index < CurrentCode->JumpTableOffsets.size() && "Invalid jump table index!");
 
-  unsigned EntrySize = JumpTable->getEntrySize(TD);
+  unsigned EntrySize = CurrentCode->JumpTableEntrySize;
 
   unsigned Offset = 0;
   for (unsigned i = 0; i < Index; ++i)
-    Offset += JT[i].MBBs.size();
+	  Offset += CurrentCode->JumpTableOffsets[i];
 
    Offset *= EntrySize;
 
-  return (uintptr_t)((char *)JumpTableBase + Offset);
+  return (uintptr_t)JumpTableBase - (uintptr_t)CurrentCode->AlignedStart + (uintptr_t)CurrentCode->Target + Offset;
 }
 
 uint8_t *Emitter::startFunctionBody(const Function *F, uintptr_t &ActualSize)

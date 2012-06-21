@@ -1,10 +1,9 @@
 #include "shade.hpp"
+#include "process.hpp"
 #include "compiler/compiler.hpp"
 #include "compiler/disassembler.hpp"
 
 #include <sstream>
-
-HANDLE Shade::process;
 
 void Shade::write(void *remote, const void *local, size_t size)
 {
@@ -55,7 +54,7 @@ extern "C" D3C_EXPORT d3c_error_t D3C_API d3c_init()
 {
 	try
 	{
-		Shade::process = GetCurrentProcess();
+		Shade::create_process();
 
 		Shade::init_disassembler();
 		Shade::compile_module();

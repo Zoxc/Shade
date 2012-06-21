@@ -1,4 +1,5 @@
 #include "../shade.hpp"
+#include "../process.hpp"
 #include "compiler.hpp"
 #include "disassembler.hpp"
 #include "emitter.hpp"
@@ -59,6 +60,8 @@ void Shade::compile_module()
 
 	Module *module = ParseBitcodeFile(buffer.get(), getGlobalContext());
 	auto &functions = module->getFunctionList();
+
+	goto skip_random;
 	
 	for(auto i = functions.begin(); i != functions.end(); ++i)
 	{
@@ -80,7 +83,7 @@ void Shade::compile_module()
 
 			IRBuilder<> b(&*pos);
 			
-			ConstantInt *number = ConstantInt::get(getGlobalContext(), APInt(32,  Prelude::align(rand(), 4) % 256));
+			ConstantInt *number = ConstantInt::get(getGlobalContext(), APInt(32, Prelude::align(rand(), 4) & 0xFF));
 
 			static Instruction::BinaryOps operators[] = {
 				Instruction::Add,
@@ -99,7 +102,8 @@ void Shade::compile_module()
 			b.CreateStore(dummy_result, dummy, false);
 		}
 	}
-	
+
+skip_random:
 	module->dump();
 
 	verifyModule(*module); 
@@ -136,5 +140,11 @@ void Shade::compile_module()
 
 	auto init = (void (*)(int a))engine.getPointerToFunction(module->getFunction("init"));
 
-	init(2);
+	remote_event([&](CONTEXT &ctx) {
+		ctx.Eip = (DWORD)init;
+		ctx.Ecx = 2;
+		ctx.Edx = (DWORD)remote_event_handle;
+	}, true);
+
+	//init(2);
 }

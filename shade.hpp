@@ -17,6 +17,7 @@
 
 namespace Shade
 {
+	extern HANDLE thread;
 	extern HANDLE process;
 	
 	void write(void *remote, const void *local, size_t size);
