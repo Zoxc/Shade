@@ -85,7 +85,7 @@ namespace Shade
 
 				result = (char *)Prelude::align((size_t)current, alignment);
 
-				char *next = current + bytes;
+				char *next = result + bytes;
 		
 				if(prelude_unlikely(next > max))
 					return get_page(bytes, alignment);
