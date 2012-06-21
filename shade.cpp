@@ -30,16 +30,16 @@ void Shade::win32_error(std::string message)
 
 	LocalFree(msg_buffer);
 
-	throw error(msg.str());
+	error(msg.str());
 }
 
-d3c_error_t Shade::error(std::string message)
+void Shade::error(std::string message)
 {
 	auto result = new d3c_error;
 
 	result->message = strdup(message.c_str());
 
-	return result;
+	throw result;
 }
 
 extern "C" D3C_EXPORT void D3C_API d3c_free_error(d3c_error_t error)

@@ -5,6 +5,7 @@
 #include "emitter.hpp"
 #include "engine.hpp"
 #include "remote-heap.hpp"
+#include "../external/call.hpp"
 
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
@@ -33,7 +34,7 @@ Shade::RemoteHeap data_section(PAGE_READWRITE);
 
 static void fatal_error_handler(void *user_data, const std::string& reason)
 {
-	throw Shade::error("Fatal LLVM Error: " + reason);
+	Shade::error("Fatal LLVM Error: " + reason);
 }
 
 void Shade::compile_module()
@@ -138,13 +139,17 @@ skip_random:
 
 	// "llvm.global_ctors" Array of constructors
 
-	auto init = (void (*)(int a))engine.getPointerToFunction(module->getFunction("init"));
+	void *init = engine.getPointerToFunction(module->getFunction("init"));
 
-	remote_event([&](CONTEXT &ctx) {
-		ctx.Eip = (DWORD)init;
-		ctx.Ecx = 2;
-		ctx.Edx = (DWORD)remote_event_handle;
-	}, true);
+	Call call;
 
-	//init(2);
+	call.event = remote_event_handle;
+
+	auto call_global = module->getGlobalVariable("_ZN5Shade4callE"); // Shade::call
+
+	void *remote_call = emitter.getGlobalAddress(call_global);
+
+	write(remote_call, &call, sizeof(Call));
+
+	remote_event(init, true);
 }

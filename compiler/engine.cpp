@@ -49,7 +49,7 @@ void *Engine::getPointerToFunction(Function *F)
     return Addr;
   }
 
-  throw error((StringRef("Unable to find function: ") + F->getName()).str());
+  error((StringRef("Unable to find function: ") + F->getName()).str());
 }
 
 std::vector<std::string> Engine::modules;
@@ -69,7 +69,7 @@ void *Engine::getPointerToNamedFunction(const std::string &Name, bool AbortOnFai
 			return result;
 	}
   if(AbortOnFailure)
-	  throw error("Linking error: Unknown external function '" + Name + "'");
+	  error("Linking error: Unknown external function '" + Name + "'");
 
   return 0;
 }

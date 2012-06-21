@@ -81,9 +81,7 @@ namespace Shade
 			
 			void *allocate(size_t bytes, size_t alignment)
 			{
-				char *result = current;
-
-				result = (char *)Prelude::align((size_t)current, alignment);
+				char *result = (char *)Prelude::align((size_t)current, alignment);
 
 				char *next = result + bytes;
 		

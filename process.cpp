@@ -6,6 +6,49 @@ HANDLE Shade::process;
 HANDLE Shade::local_event_handle;
 HANDLE Shade::remote_event_handle;
 
+void Shade::remote_event(void *ip, bool paused)
+{
+	if(!ResetEvent(local_event_handle))
+			win32_error("Unable to reset event");
+
+	if(!paused)
+	{
+		if(SuspendThread(thread) == (DWORD)-1)
+			win32_error("Unable to pause remote thread");
+	}
+
+	CONTEXT context;
+
+	context.ContextFlags = CONTEXT_ALL;
+
+	if(!GetThreadContext(thread, &context))
+		win32_error("Unable to get remote thread context");
+	
+	CONTEXT new_context = context;
+	
+	new_context.Eip = (DWORD)ip;
+	new_context.Esp -= 128; // Skip some bytes on the stack
+	new_context.Esp = new_context.Esp & ~15; // Align to 16 byte boundary
+		
+	if(!SetThreadContext(thread, &new_context))
+		win32_error("Unable to set remote thread context");
+	
+	if(ResumeThread(thread) == (DWORD)-1)
+		win32_error("Unable to start remote code");
+
+	if(WaitForSingleObject(local_event_handle, INFINITE) == WAIT_FAILED)
+		win32_error("Unable to wait for remote code");
+		
+	if(SuspendThread(thread) == (DWORD)-1)
+		win32_error("Unable to pause remote thread");
+		
+	if(!SetThreadContext(thread, &context))
+		win32_error("Unable to restore remote thread context");
+	
+	if(ResumeThread(thread) == (DWORD)-1)
+		win32_error("Unable to resume remote thread");
+}
+
 void Shade::create_process()
 {
 	LPWSTR *argv;
@@ -19,7 +62,7 @@ void Shade::create_process()
 	argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 
 	if(argc < 2)
-		throw error("No executable was specified");
+		error("No executable was specified");
 
 	if(CreateProcessW(argv[1], 0, 0, 0, false, CREATE_SUSPENDED, 0, 0, &si, &pi) == 0)
 		win32_error("Unable to create process");

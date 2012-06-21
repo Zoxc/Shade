@@ -125,7 +125,6 @@ namespace Shade
 	/// emitting a function.
 	void deallocateFunctionBody(void *Body);
 
-	void *getGlobalAddress(const llvm::GlobalValue *V);
 	void *getGlobalVariableAddress(const llvm::GlobalVariable *V);
 	void *getGlobalValueIndirectSym(llvm::GlobalValue *GV, void *GVAddress);
   public:
@@ -141,6 +140,7 @@ namespace Shade
     virtual void startFunction(llvm::MachineFunction &F);
     virtual bool finishFunction(llvm::MachineFunction &F);
 	
+	void *getGlobalAddress(const llvm::GlobalValue *V);
 	void resolveRelocations();
 
     void emitConstantPool(llvm::MachineConstantPool *MCP);

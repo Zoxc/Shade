@@ -11,6 +11,7 @@
 
 #include <cstdlib>
 #include <string>
+#include <Prelude/Internal/Common.hpp>
 
 #define D3C_EXPORTS
 #include "d3c.h"
@@ -23,8 +24,8 @@ namespace Shade
 	void write(void *remote, const void *local, size_t size);
 	void read(const void *remote, void *local, size_t size);
 	
-	void win32_error(std::string message);
-	d3c_error_t error(std::string message);
+	prelude_noreturn void win32_error(std::string message);
+	prelude_noreturn void error(std::string message);
 
-	#define LLVM_ERROR(expr) do { auto error = (expr); if(error.value()) throw Shade::error(std::string("LLVM Error: ") + error.message().c_str()); } while(0)
+	#define LLVM_ERROR(expr) do { auto error = (expr); if(error.value()) Shade::error(std::string("LLVM Error: ") + error.message().c_str()); } while(0)
 };
