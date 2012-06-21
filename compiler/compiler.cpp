@@ -153,12 +153,13 @@ skip_random:
 	
 	remote_event(init, true);
 
-	remote_event(remote.list_ui);
-
-	read(remote.call, &call, sizeof(Call));
-
-	for(auto i = call.result.ui_list->begin(); i != call.result.ui_list->end(); ++i)
+	for(int j = 0; j < 13; ++j)
 	{
-		printf("UIElement: %d\n", i().value);
+		remote_event(remote.list_ui);
+
+		for(auto i = info->result.ui_list->begin(); i != info->result.ui_list->end(); ++i)
+		{
+			printf("UIElement: %d\n", i().value);
+		}
 	}
 }

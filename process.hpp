@@ -16,13 +16,14 @@ namespace Shade
 	{
 		HANDLE event_handle;
 		HANDLE memory;
-		uintptr_t mapping;
 	};
-
+	
 	extern Remote remote;
 	extern Local local;
 	
 	void allocate_shared_memory();
+	
+	double avg_time_per_remote_call();
 
 	void remote_event(void *ip, bool paused = false);
 

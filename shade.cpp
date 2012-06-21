@@ -60,6 +60,8 @@ extern "C" D3C_EXPORT d3c_error_t D3C_API d3c_init()
 		Shade::init_disassembler();
 		Shade::compile_module();
 
+		std::cout << "Avg. time per remote call: " << Shade::avg_time_per_remote_call() << std::endl;
+
 		return 0;
 	} catch(d3c_error_t error)
 	{

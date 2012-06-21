@@ -314,7 +314,7 @@ void Emitter::resolveRelocations()
 		  void *ResultPtr = 0;
 		  if (!MR.letTargetResolve()) {
 			if (MR.isExternalSymbol()) {
-				abort();
+				std::cout << "External symbol: '" << MR.getExternalSymbol()  << "'" << std::endl;
 			  ResultPtr = engine.getPointerToNamedFunction(MR.getExternalSymbol(), false);
 			  DEBUG(dbgs() << "JIT: Map \'" << MR.getExternalSymbol() << "\' to ["
 						   << ResultPtr << "]\n");
