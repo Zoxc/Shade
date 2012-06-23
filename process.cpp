@@ -65,7 +65,9 @@ void Shade::remote_event(void *ip, bool paused)
 		win32_error("Unable to get remote thread context");
 	
 	CONTEXT new_context = info->context;
-	
+
+	new_context.ContextFlags = CONTEXT_CONTROL;
+
 	new_context.Eip = (DWORD)ip;
 	new_context.Esp -= 128; // Skip some bytes on the stack
 	new_context.Esp = new_context.Esp & ~15; // Align to 16 byte boundary
@@ -76,8 +78,15 @@ void Shade::remote_event(void *ip, bool paused)
 	if(ResumeThread(thread) == (DWORD)-1)
 		win32_error("Unable to start remote code");
 
-	if(WaitForSingleObject(local.event_handle, INFINITE) == WAIT_FAILED)
-		win32_error("Unable to wait for remote code");
+	auto result = WaitForMultipleObjects(2, local.wait, FALSE, INFINITE);
+	
+	if(result != WAIT_OBJECT_0 + 1)
+	{
+		if(result == WAIT_OBJECT_0)
+			win32_error("Remote main thread terminated while wailing for event");
+		else
+			win32_error("Unable to wait for remote code");
+	}
 	
 	QueryPerformanceCounter(&stop);
 
@@ -115,4 +124,7 @@ void Shade::create_process()
 	
 	if(!DuplicateHandle(GetCurrentProcess(), local.event_handle, pi.hProcess, &remote.event_handle, 0, FALSE, DUPLICATE_SAME_ACCESS))
 		win32_error("Unable to duplicate event handle");
+	
+	local.wait[0] = thread;
+	local.wait[1] = local.event_handle;
 }

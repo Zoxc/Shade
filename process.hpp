@@ -16,6 +16,7 @@ namespace Shade
 	{
 		HANDLE event_handle;
 		HANDLE memory;
+		HANDLE wait[2];
 	};
 	
 	extern Remote remote;
