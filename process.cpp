@@ -9,9 +9,12 @@ HANDLE Shade::process;
 Shade::Remote Shade::remote;
 Shade::Local Shade::local;
 
-static LARGE_INTEGER freq;
-static UINT64 remote_call_time;
-static size_t remote_call_count;
+namespace Shade
+{
+	LARGE_INTEGER freq;
+	UINT64 remote_call_time;
+	size_t remote_call_count;
+};
 
 double Shade::avg_time_per_remote_call()
 {
@@ -48,7 +51,7 @@ void Shade::remote_event(void *ip, bool paused)
 		win32_error("Unable to get exit code");
 
 	if(exit != STILL_ACTIVE)
-		win32_error("Process is dead!");
+		error("Process is dead!");
 
 	QueryPerformanceCounter(&start);
 
@@ -83,9 +86,11 @@ void Shade::remote_event(void *ip, bool paused)
 	if(result != WAIT_OBJECT_0 + 1)
 	{
 		if(result == WAIT_OBJECT_0)
-			win32_error("Remote main thread terminated while wailing for event");
+			error("Remote main thread terminated while wailing for event");
+		else if(result == WAIT_FAILED)
+			win32_error("Failed to wait for remote code");
 		else
-			win32_error("Unable to wait for remote code");
+			error("Unable to wait for remote code");
 	}
 	
 	QueryPerformanceCounter(&stop);
