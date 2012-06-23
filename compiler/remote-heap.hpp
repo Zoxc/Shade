@@ -72,8 +72,7 @@ namespace Shade
 					Page *current = *page;
 					++page;
 					
-					if(!VirtualFreeEx(process, current->address, 0, MEM_RELEASE))
-						win32_error("Unable to free remote memory");
+					VirtualFreeEx(process, current->address, 0, MEM_RELEASE);
 
 					delete current;
 				};
