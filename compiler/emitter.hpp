@@ -1,3 +1,8 @@
+//
+// Code is based on LLVM's JITEmitter.cpp which is under University of Illinois
+// Open Source License. See LLVM-License.txt for details.
+//
+
 #include "../shade.hpp"
 
 namespace llvm

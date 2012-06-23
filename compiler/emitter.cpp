@@ -1,16 +1,7 @@
-//===-- JITEmitter.cpp - Write machine code to executable memory ----------===//
 //
-//                     The LLVM Compiler Infrastructure
+// Code is based on LLVM's JITEmitter.cpp which is under University of Illinois
+// Open Source License. See LLVM-License.txt for details.
 //
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
-//
-//===----------------------------------------------------------------------===//
-//
-// This file defines a MachineCodeEmitter object that is used by the JIT to
-// write machine code to memory and remember where relocatable values are.
-//
-//===----------------------------------------------------------------------===//
 
 #include "emitter.hpp"
 #include "engine.hpp"
