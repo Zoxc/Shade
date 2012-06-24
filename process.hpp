@@ -1,32 +1,35 @@
 #pragma once
 #include "shade.hpp"
-#include "external/call.hpp"
 
 namespace Shade
 {
-	struct Remote
+	struct Event
 	{
-		void *call;
-		void *list_ui;
-		HANDLE event_handle;
-		HANDLE memory;
+		HANDLE event;
+		HANDLE thread;
 	};
 	
 	struct Local
 	{
-		HANDLE event_handle;
+		Event start;
+		Event end;
 		HANDLE memory;
-		HANDLE wait[2];
 	};
 	
-	extern Remote remote;
+	extern HANDLE remote_memory;
 	extern Local local;
 	
 	void allocate_shared_memory();
 	
+	void remote_event(void *ip, bool paused);
+
 	double avg_time_per_remote_call();
 
-	void remote_event(void *ip, bool paused = false);
-
+	void create_event(Event &local, HANDLE &remote);
+	void wait_event(Event &event);
+	void reset_event(Event &event);
+	void signal_event(Event &event);
+	
 	void create_process();
+	void resume_process();
 };

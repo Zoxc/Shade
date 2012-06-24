@@ -4,7 +4,8 @@
 #include "disassembler.hpp"
 #include "emitter.hpp"
 #include "engine.hpp"
-#include "remote-heap.hpp"
+
+#include <sstream>
 
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
@@ -28,7 +29,7 @@
 
 using namespace llvm;
 
-Shade::RemoteHeap code_section(PAGE_EXECUTE_READ);
+Shade::RemoteHeap Shade::code_section(PAGE_EXECUTE_READ);
 Shade::RemoteHeap data_section(PAGE_READWRITE);
 
 static void fatal_error_handler(void *user_data, const std::string& reason)
@@ -138,28 +139,33 @@ skip_random:
 
 	// "llvm.global_ctors" Array of constructors
 
-	void *init = engine.getPointerToFunction(module->getFunction("init"));
+	void *init = engine.getPointerToFunction("init");
 
-	remote.list_ui = engine.getPointerToFunction(module->getFunction("list_ui"));
+	DWORD thread_id;
 
-	call.event = remote.event_handle;
-	call.memory = remote.memory;
+	HANDLE init_thread = CreateRemoteThread(process, 0, 0, (LPTHREAD_START_ROUTINE)init, (void *)remote_memory, 0, &thread_id);
 
-	auto call_global = module->getGlobalVariable("_ZN5Shade4callE"); // Shade::call
+	if(!init_thread)
+		win32_error("Unable to create init thread");
 
-	remote.call = emitter.getGlobalAddress(call_global);
+	if(WaitForSingleObject(init_thread, INFINITE) == WAIT_FAILED)
+		win32_error("Unable to wait on init thread");
 
-	write(remote.call, &call, sizeof(Call));
-	
-	remote_event(init, true);
+	DWORD init_result;
 
-	for(int j = 0; j < 13; ++j)
+	if(!GetExitCodeThread(init_thread, &init_result))
+		win32_error("Unable to get init thread result");
+
+	CloseHandle(init_thread);
+
+	if(init_result != 0)
 	{
-		remote_event(remote.list_ui);
+		std::stringstream msg;
 
-		for(auto i = info->result.ui_list->begin(); i != info->result.ui_list->end(); ++i)
-		{
-			printf("UIElement: %d\n", i().value);
-		}
+		msg << "Init function failed with error " << init_result;
+
+		error(msg.str());
 	}
+
+	detour((void *)shared->d3d_present_offset, shared->d3d_present, shared->d3d_present);
 }

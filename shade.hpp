@@ -16,6 +16,8 @@
 #define D3C_EXPORTS
 #include "d3c.h"
 
+#include "external/shared.hpp"
+
 namespace Shade
 {
 	extern HANDLE thread;
@@ -28,4 +30,34 @@ namespace Shade
 	prelude_noreturn void error(std::string message);
 
 	#define LLVM_ERROR(expr) do { auto error = (expr); if(error.value()) Shade::error(std::string("LLVM Error: ") + error.message().c_str()); } while(0)
+	
+	template<typename F> void access(void *memory, size_t size, F func)
+	{
+		DWORD old;
+
+		if(!VirtualProtectEx(process, memory, size, PAGE_EXECUTE_READWRITE, &old))
+			win32_error("Unable to access remote memory");
+
+		func();
+		
+		if(!VirtualProtectEx(process, memory, size, old, &old))
+			win32_error("Unable to restore remote memory access");
+	};
+
+	template<typename F> d3c_error_t wrap(F func)
+	{
+		try
+		{
+			func();
+
+			return 0;
+		} catch(d3c_error_t error)
+		{
+			return error;
+		}
+	}
+	
+	void remote_call(Call::Type type);
+	void init();
+	void loop(d3c_tick_t tick_func);
 };

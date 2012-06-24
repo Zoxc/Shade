@@ -5,13 +5,14 @@
 
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/Function.h"
+#include "llvm/Module.h"
 
 using namespace llvm;
 
 namespace Shade
 {
 
-Engine::Engine(Module *m, const TargetData &td) : ExecutionEngine(m)
+Engine::Engine(Module *m, const TargetData &td) : ExecutionEngine(m), module(m)
 {
 	setTargetData(&td);
 }
@@ -50,6 +51,19 @@ void *Engine::getPointerToFunction(Function *F)
   }
 
   error((StringRef("Unable to find function: ") + F->getName()).str());
+}
+
+void *Engine::getPointerToFunction(const std::string &Name)
+{
+	auto f = module->getFunction(Name);
+
+	if(!f)
+		goto throw_error;
+
+	return getPointerToFunction(f);
+
+throw_error:
+	 error("Unable to find function: " + Name);
 }
 
 std::vector<std::string> Engine::modules;

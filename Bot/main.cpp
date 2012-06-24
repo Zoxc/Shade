@@ -7,6 +7,11 @@
 #include <d3c.h>
 #include <tchar.h>
 
+void D3C_API tick()
+{
+	std::cout << "Tick" << std::endl;
+}
+
 int _tmain(int argc, _TCHAR* argv[])
 {
 	std::cout << "Hi" << std::endl;
@@ -14,7 +19,18 @@ int _tmain(int argc, _TCHAR* argv[])
 	auto error = d3c_init();
 
 	if(error)
+	{
 		std::cerr << "Error: " << error->message << std::endl;
+		return 1;
+	}
+
+	error = d3c_loop(&tick);
+	
+	if(error)
+	{
+		std::cerr << "Error: " << error->message << std::endl;
+		return 1;
+	}
 
 	return 0;
 }

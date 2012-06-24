@@ -19,6 +19,7 @@ namespace Shade
   class Engine : public llvm::ExecutionEngine {
 public:
 	static std::vector<std::string> modules;
+	llvm::Module *module;
 
 	Engine(llvm::Module *m, const llvm::TargetData &td);
 	~Engine() {}
@@ -47,7 +48,8 @@ public:
   virtual void *getPointerToBasicBlock(llvm::BasicBlock *BB);
 
   virtual void *getPointerToFunction(llvm::Function *F);
-
+  
+  void *getPointerToFunction(const std::string &Name);
   /// getPointerToNamedFunction - This method returns the address of the
   /// specified function by using the dlsym function call.  As such it is only
   /// useful for resolving library symbols, not code generated symbols.

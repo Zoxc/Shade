@@ -1,5 +1,6 @@
 #include "shade.hpp"
 #include "process.hpp"
+#include "d3d.hpp"
 #include "compiler/compiler.hpp"
 #include "compiler/disassembler.hpp"
 
@@ -50,22 +51,46 @@ extern "C" D3C_EXPORT void D3C_API d3c_free_error(d3c_error_t error)
 	delete error;
 }
 
+void Shade::init()
+{
+	create_process();
+	allocate_shared_memory();
+	get_preset_offset();
+
+	init_disassembler();
+	compile_module();
+
+	resume_process();
+}
+
+void Shade::remote_call(Call::Type type)
+{
+	shared->call_type = type;
+	signal_event(local.end);
+	wait_event(local.start);
+	reset_event(local.start);
+}
+
+void Shade::loop(d3c_tick_t tick_func)
+{
+	while(true)
+	{
+		remote_call(Call::Continue);
+
+		tick_func();
+	}
+}
+
+extern "C" D3C_EXPORT d3c_error_t D3C_API d3c_loop(d3c_tick_t tick_func)
+{
+	return Shade::wrap([&] {
+		Shade::loop(tick_func);
+	});
+}
+
 extern "C" D3C_EXPORT d3c_error_t D3C_API d3c_init()
 {
-	try
-	{
-		Shade::create_process();
-		Shade::allocate_shared_memory();
-
-		Shade::init_disassembler();
-		Shade::compile_module();
-
-		std::cout << "Avg. time per remote call: " << Shade::avg_time_per_remote_call() << std::endl;
-
-		return 0;
-	} catch(d3c_error_t error)
-	{
-		
-		return error;
-	}
+	return Shade::wrap([&] {
+		Shade::init();
+	});
 }

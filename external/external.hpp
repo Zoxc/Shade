@@ -3,9 +3,12 @@
 #define NOMINMAX
 #include <windows.h>
 
-typedef unsigned int size_t;
-
 namespace Shade
 {
-	void *init();
+	namespace Remote
+	{
+		typedef unsigned int size_t;
+
+		size_t init();
+	};
 };

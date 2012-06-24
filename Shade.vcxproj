@@ -58,7 +58,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)..\Libraries\DynamoRIO\lib32\$(Configuration);$(SolutionDir)..\Libraries\llvm-3.1\build\lib\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>drdecode.lib;LLVMJIT.lib;LLVMExecutionEngine.lib;LLVMBitReader.lib;LLVMX86CodeGen.lib;LLVMX86AsmParser.lib;LLVMX86Disassembler.lib;LLVMAsmPrinter.lib;LLVMSelectionDAG.lib;LLVMX86Desc.lib;LLVMMCParser.lib;LLVMCodeGen.lib;LLVMX86AsmPrinter.lib;LLVMX86Info.lib;LLVMScalarOpts.lib;LLVMX86Utils.lib;LLVMInstCombine.lib;LLVMTransformUtils.lib;LLVMipa.lib;LLVMAnalysis.lib;LLVMTarget.lib;LLVMCore.lib;LLVMMC.lib;LLVMObject.lib;LLVMSupport.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;drdecode.lib;LLVMJIT.lib;LLVMExecutionEngine.lib;LLVMBitReader.lib;LLVMX86CodeGen.lib;LLVMX86AsmParser.lib;LLVMX86Disassembler.lib;LLVMAsmPrinter.lib;LLVMSelectionDAG.lib;LLVMX86Desc.lib;LLVMMCParser.lib;LLVMCodeGen.lib;LLVMX86AsmPrinter.lib;LLVMX86Info.lib;LLVMScalarOpts.lib;LLVMX86Utils.lib;LLVMInstCombine.lib;LLVMTransformUtils.lib;LLVMipa.lib;LLVMAnalysis.lib;LLVMTarget.lib;LLVMCore.lib;LLVMMC.lib;LLVMObject.lib;LLVMSupport.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -75,7 +75,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)..\Libraries\DynamoRIO\lib32\$(Configuration);$(SolutionDir)..\Libraries\llvm-3.1\build\lib\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>drdecode.lib;LLVMJIT.lib;LLVMExecutionEngine.lib;LLVMBitReader.lib;LLVMX86CodeGen.lib;LLVMX86AsmParser.lib;LLVMX86Disassembler.lib;LLVMAsmPrinter.lib;LLVMSelectionDAG.lib;LLVMX86Desc.lib;LLVMMCParser.lib;LLVMCodeGen.lib;LLVMX86AsmPrinter.lib;LLVMX86Info.lib;LLVMScalarOpts.lib;LLVMX86Utils.lib;LLVMInstCombine.lib;LLVMTransformUtils.lib;LLVMipa.lib;LLVMAnalysis.lib;LLVMTarget.lib;LLVMCore.lib;LLVMMC.lib;LLVMObject.lib;LLVMSupport.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;drdecode.lib;LLVMJIT.lib;LLVMExecutionEngine.lib;LLVMBitReader.lib;LLVMX86CodeGen.lib;LLVMX86AsmParser.lib;LLVMX86Disassembler.lib;LLVMAsmPrinter.lib;LLVMSelectionDAG.lib;LLVMX86Desc.lib;LLVMMCParser.lib;LLVMCodeGen.lib;LLVMX86AsmPrinter.lib;LLVMX86Info.lib;LLVMScalarOpts.lib;LLVMX86Utils.lib;LLVMInstCombine.lib;LLVMTransformUtils.lib;LLVMipa.lib;LLVMAnalysis.lib;LLVMTarget.lib;LLVMCore.lib;LLVMMC.lib;LLVMObject.lib;LLVMSupport.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -86,8 +86,9 @@
     <ClInclude Include="compiler\remote-heap.hpp" />
     <ClInclude Include="d3c.h" />
     <ClInclude Include=".\shade.hpp" />
-    <ClInclude Include="external\call.hpp" />
+    <ClInclude Include="d3d.hpp" />
     <ClInclude Include="external\heap.hpp" />
+    <ClInclude Include="external\shared.hpp" />
     <ClInclude Include="process.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -95,6 +96,7 @@
     <ClCompile Include="compiler\disassembler.cpp" />
     <ClCompile Include="compiler\emitter.cpp" />
     <ClCompile Include="compiler\engine.cpp" />
+    <ClCompile Include="d3d.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -105,6 +107,7 @@
     </ClCompile>
     <ClCompile Include=".\shade.cpp" />
     <ClCompile Include="external\heap.cpp" />
+    <ClCompile Include="external\shared.cpp" />
     <ClCompile Include="process.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

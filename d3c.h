@@ -16,7 +16,10 @@ typedef struct d3c_error
 	const char *message;
 } *d3c_error_t;
 
+typedef void (D3C_API *d3c_tick_t)();
+
 D3C_EXPORT d3c_error_t D3C_API d3c_init();
+D3C_EXPORT d3c_error_t D3C_API d3c_loop(d3c_tick_t tick_func);
 D3C_EXPORT void D3C_API d3c_free_error(d3c_error_t error);
 
 #ifdef __cplusplus

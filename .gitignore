@@ -2,3 +2,11 @@
 /Release
 /Bot/Debug
 /Bot/Release
+*.o
+*.bc
+*.ll
+*.pdb
+*.exe
+*.dll
+*.suo
+*.vcxproj.*
