@@ -1,5 +1,8 @@
 #include "external.hpp"
 #include "shared.hpp"
+#include "d3.hpp"
+
+extern "C" void ctors();
 
 namespace Shade
 {
@@ -70,6 +73,10 @@ namespace Shade
 				
 			shared->d3d_present_offset = (size_t)d3d9 + shared->d3d_present_offset;
 			shared->d3d_present = &d3d_present;
+			
+			D3::init();
+			
+			ctors();
 			
 			return 0;
 		}

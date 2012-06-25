@@ -27,6 +27,7 @@ namespace Shade
 		struct {
 			Ptr<List<Remote::UIElement>> ui_list;
 			size_t num;
+			void *ptr;
 		} result;
 	};
 	

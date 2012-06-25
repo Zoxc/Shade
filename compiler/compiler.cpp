@@ -37,6 +37,55 @@ static void fatal_error_handler(void *user_data, const std::string& reason)
 	Shade::error("Fatal LLVM Error: " + reason);
 }
 
+//
+// Code for create_ctor_func is based on KLEE's KModule.cpp which is under University of Illinois
+// Open Source License. See LLVM-License.txt for details.
+//
+static Function *create_ctor_func(Module *module, GlobalVariable *gv)
+{
+	Function *fn = module->getFunction("ctors");
+
+	assert(fn);
+
+	BasicBlock *bb = BasicBlock::Create(getGlobalContext(), "entry", fn);
+  
+	if(gv)
+	{
+		assert(!gv->isDeclaration() && !gv->hasInternalLinkage());
+  
+		ConstantArray *arr = dyn_cast<ConstantArray>(gv->getInitializer());
+
+		if (arr) {
+			for (unsigned i=0; i<arr->getNumOperands(); i++)
+			{
+				ConstantStruct *cs = cast<ConstantStruct>(arr->getOperand(i));
+				assert(cs->getNumOperands()==2 && "unexpected element in ctor initializer list");
+      
+				Constant *fp = cs->getOperand(1);      
+
+				if (!fp->isNullValue())
+				{
+					if(llvm::ConstantExpr *ce = dyn_cast<llvm::ConstantExpr>(fp))
+						fp = ce->getOperand(0);
+
+					if (Function *f = dyn_cast<Function>(fp))
+					{
+						CallInst::Create(f, "", bb);
+					}
+					else
+					{
+						assert(0 && "unable to get function pointer from ctor initializer list");
+					}
+				}
+			}
+		}
+	}
+
+	ReturnInst::Create(getGlobalContext(), bb);
+
+	return fn;
+}
+
 void Shade::compile_module()
 {
 	srand(GetTickCount());
@@ -61,6 +110,10 @@ void Shade::compile_module()
 
 	Module *module = ParseBitcodeFile(buffer.get(), getGlobalContext());
 	auto &functions = module->getFunctionList();
+	
+	GlobalVariable *ctors = module->getNamedGlobal("llvm.global_ctors");
+
+	create_ctor_func(module, ctors);
 
 	goto skip_random;
 	
