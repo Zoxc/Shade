@@ -26,6 +26,7 @@ namespace Shade
 	void write(void *remote, const void *local, size_t size);
 	void read(const void *remote, void *local, size_t size);
 	
+	prelude_noreturn void win32_error(DWORD err_no, std::string message);
 	prelude_noreturn void win32_error(std::string message);
 	prelude_noreturn void error(std::string message);
 

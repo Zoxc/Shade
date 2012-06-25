@@ -17,7 +17,11 @@ namespace Shade
 			
 			while(true)
 			{
-				WaitForSingleObject(shared->event_end, INFINITE);
+				auto result = WaitForMultipleObjects(2, &shared->event_end, FALSE, INFINITE);
+
+				if(result != WAIT_OBJECT_0) // The event was not triggered. This means the controlling application was terminated and we shouldn't do anything.
+					return;
+				
 				ResetEvent(shared->event_end);
 				
 				switch(shared->call_type)

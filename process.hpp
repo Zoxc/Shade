@@ -30,6 +30,11 @@ namespace Shade
 	void reset_event(Event &event);
 	void signal_event(Event &event);
 	
+	void get_debug_privileges();
+	void set_privilege(HANDLE token, const char *privilege);
+	
+	void open_process(DWORD process_id, DWORD thread_id);
+	void find_process();
 	void create_process();
 	void resume_process();
 };

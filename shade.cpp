@@ -18,10 +18,9 @@ void Shade::read(const void *remote, void *local, size_t size)
 		win32_error("Unable to read remote memory");
 }
 
-void Shade::win32_error(std::string message)
+void Shade::win32_error(DWORD err_no, std::string message)
 {
 	char *msg_buffer;
-	DWORD err_no = GetLastError(); 
 
 	FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |	FORMAT_MESSAGE_IGNORE_INSERTS, 0, err_no, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&msg_buffer, 0, 0);
 	
@@ -32,6 +31,11 @@ void Shade::win32_error(std::string message)
 	LocalFree(msg_buffer);
 
 	error(msg.str());
+}
+
+void Shade::win32_error(std::string message)
+{
+	win32_error(GetLastError(), message);
 }
 
 void Shade::error(std::string message)
@@ -53,7 +57,10 @@ extern "C" D3C_EXPORT void D3C_API d3c_free_error(d3c_error_t error)
 
 void Shade::init()
 {
-	create_process();
+	get_debug_privileges();
+	
+	find_process();
+	//create_process();
 	allocate_shared_memory();
 	get_preset_offset();
 

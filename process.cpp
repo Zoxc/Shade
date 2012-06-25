@@ -8,6 +8,82 @@ HANDLE Shade::process;
 HANDLE Shade::remote_memory;
 Shade::Local Shade::local;
 
+void Shade::open_process(DWORD process_id, DWORD thread_id)
+{
+	process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process_id);
+
+	if(!process)
+		win32_error("Unable to open the remote process");
+
+	DWORD size = MAX_PATH;
+	char fullname[MAX_PATH];
+
+	if(!QueryFullProcessImageNameA(process, 0, fullname, &size))
+		win32_error("Unable to get the remote process filename");
+
+	thread = OpenThread(SYNCHRONIZE, FALSE, thread_id);
+
+	if(!thread)
+		win32_error("Unable to open the window thread");
+}
+
+void Shade::find_process()
+{
+	const char *window_class = "D3 Main Window Class";
+  
+	HWND window = FindWindowExA(0, 0, window_class, 0);
+
+	if(window)
+	{
+		DWORD process_id;
+
+		DWORD thread_id = GetWindowThreadProcessId(window, &process_id);
+
+		open_process(process_id, thread_id);
+	}
+}
+
+void Shade::set_privilege(HANDLE token, const char *privilege)
+{
+	TOKEN_PRIVILEGES token_privileges, prev_token_privileges;
+
+	memset(&token_privileges, 0, sizeof(TOKEN_PRIVILEGES));
+
+	if(!LookupPrivilegeValueA(0, privilege, &token_privileges.Privileges[0].Luid))
+		win32_error("Unable to lookup privilege value");
+     
+	token_privileges.PrivilegeCount = 1;
+	token_privileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+	DWORD dummy;
+
+	if(!AdjustTokenPrivileges(token, FALSE, &token_privileges, sizeof(TOKEN_PRIVILEGES), &prev_token_privileges, &dummy))
+		win32_error("Unable to adjust token privileges");
+}
+
+void Shade::get_debug_privileges()
+{
+	HANDLE token;
+  
+	if(!OpenThreadToken(GetCurrentThread(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, FALSE, &token))
+	{
+		DWORD err = GetLastError();
+
+		if(err == ERROR_NO_TOKEN)
+		{
+			if(!ImpersonateSelf(SecurityImpersonation))
+				win32_error("Unable to impersonate self");
+
+			if(!OpenThreadToken(GetCurrentThread(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, FALSE, &token))
+				win32_error(err, "Unable to open thread token");
+		}
+		else
+			win32_error(err, "Unable to open thread token");
+	}
+
+	set_privilege(token, "SeDebugPrivilege");
+}
+
 void Shade::allocate_shared_memory()
 {
 	local.memory = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)0x10000, 0); 
@@ -27,6 +103,9 @@ void Shade::allocate_shared_memory()
 
 	create_event(local.start, shared->event_start);
 	create_event(local.end, shared->event_end);
+	
+	if(!DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), process, &shared->event_thread, 0, FALSE, DUPLICATE_SAME_ACCESS))
+		win32_error("Unable to duplicate thread handle");
 }
 
 void Shade::create_process()
@@ -49,7 +128,6 @@ void Shade::create_process()
 
 	process = pi.hProcess;
 	thread = pi.hThread;
-	
 }
 
 void Shade::signal_event(Event &event)
@@ -78,7 +156,7 @@ void Shade::create_event(Event &local, HANDLE &remote)
 
 void Shade::wait_event(Event &event)
 {
-	auto result = WaitForMultipleObjects(2, (HANDLE *)&event, FALSE, INFINITE);
+	auto result = WaitForMultipleObjects(2, &event.event, FALSE, INFINITE);
 	
 	if(result != WAIT_OBJECT_0)
 	{

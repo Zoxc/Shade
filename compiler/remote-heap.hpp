@@ -72,7 +72,7 @@ namespace Shade
 					Page *current = *page;
 					++page;
 					
-					VirtualFreeEx(process, current->address, 0, MEM_RELEASE);
+					//VirtualFreeEx(process, current->address, 0, MEM_RELEASE);
 
 					delete current;
 				};
