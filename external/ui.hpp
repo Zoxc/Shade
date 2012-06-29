@@ -1,5 +1,5 @@
 #pragma once
-#include "heap.hpp"
+#include "utils.hpp"
 
 namespace Shade
 {
@@ -8,10 +8,17 @@ namespace Shade
 		struct UIElement:
 			public HeapObject
 		{
-			int value;
-			Ptr<UIElement> next;
+			void *vtable;
+			void *ptr;
+			uint64_t hash;
+			bool visible;
+			bool skipped_children;
+			Ptr<String> name;
+			Ptr<String> text;
+			
+			Vector<Ptr<UIElement>> children;
 		};
 		
-		Ptr<List<UIElement>> list_ui();
+		void list_ui();
 	};
 };

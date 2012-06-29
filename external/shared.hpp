@@ -9,13 +9,28 @@ namespace Shade
 		enum Type
 		{
 			Continue,
+			ListUI,
 			Dummy
+		};
+	};
+
+	namespace Error
+	{
+		enum Type
+		{
+			None,
+			Unknown,
+			OutOfMemory,
+			NotFound
 		};
 	};
 
 	struct Shared
 	{
-		Call::Type call_type;
+		static const size_t mapping_size = 0x2000000;
+		
+		volatile Call::Type call_type;
+		volatile Error::Type error_type;
 		HANDLE event_start;
 		
 		HANDLE event_end;
@@ -23,9 +38,9 @@ namespace Shade
 		
 		size_t d3d_present_offset;
 		void *d3d_present;
-		volatile bool triggered;
+		bool triggered;
 		struct {
-			Ptr<List<Remote::UIElement>> ui_list;
+			Ptr<Remote::UIElement> ui_root;
 			size_t num;
 			void *ptr;
 		} result;

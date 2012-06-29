@@ -1,4 +1,5 @@
 #include "heap.hpp"
+#include "shared.hpp"
 
 namespace Shade
 {
@@ -11,7 +12,11 @@ namespace Shade
 		char *next = result + bytes;
 
 		if(next > max)
-			return 0;
+		{
+			shared->error_type = Error::OutOfMemory;
+			SetEvent(shared->event_start);
+			Sleep(INFINITE);
+		}
 
 		current = next;
 

@@ -138,6 +138,14 @@ void *Emitter::getGlobalAddress(const GlobalValue *V)
 
 	if(result != GlobalOffsets.end())
 		return result->second;
+	
+	if (const GlobalVariable *GV = dyn_cast<GlobalVariable>(V))
+	{
+		report_fatal_error("Global variable '" + GV->getName().str() +  "' hasn't had an address allocated yet!");
+	}
+
+	if (const Function *F = dyn_cast<Function>(V))
+		return engine.getPointerToFunction((Function *)F);
 
 	report_fatal_error("Global hasn't had an address allocated yet!");
 }
@@ -155,11 +163,6 @@ void *Emitter::getPointerToGlobal(GlobalValue *V, void *Reference,
 
   // If we have already compiled the function, return a pointer to its body.
   Function *F = cast<Function>(V);
-
-  auto fresult = EmittedFunctions.find(F);
-
-  if(fresult != EmittedFunctions.end())
-	  return fresult->second.Target;
 
   return engine.getPointerToFunction(F);
 }
@@ -342,7 +345,7 @@ void Emitter::resolveRelocations()
 		
 		uint8_t *target = (uint8_t *)CurrentCode->Target + ((uint8_t *)CurrentCode->Code - (uint8_t *)CurrentCode->AlignedStart);
 
-		std::cout << "Function " << CurrentCode->Function->getName().str() << " starting at 0x" << (void *)target << std::endl;
+		Shade::code_log << "Function " << CurrentCode->Function->getName().str() << " starting at 0x" << (void *)target << std::endl;
 
 		Shade::disassemble_code(CurrentCode->Code, target, (uint8_t *)CurrentCode->End - (uint8_t *)CurrentCode->Code);
 		write(CurrentCode->Target, CurrentCode->AlignedStart, CurrentCode->Size);

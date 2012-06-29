@@ -33,14 +33,14 @@ void Shade::find_process()
   
 	HWND window = FindWindowExA(0, 0, window_class, 0);
 
-	if(window)
-	{
-		DWORD process_id;
+	if(!window)
+		error("Unable to find Diablo III process");
 
-		DWORD thread_id = GetWindowThreadProcessId(window, &process_id);
+	DWORD process_id;
 
-		open_process(process_id, thread_id);
-	}
+	DWORD thread_id = GetWindowThreadProcessId(window, &process_id);
+
+	open_process(process_id, thread_id);
 }
 
 void Shade::set_privilege(HANDLE token, const char *privilege)
@@ -86,15 +86,15 @@ void Shade::get_debug_privileges()
 
 void Shade::allocate_shared_memory()
 {
-	local.memory = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)0x10000, 0); 
-
+	local.memory = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, Shared::mapping_size, 0); 
+	
 	if(!local.memory)
 		win32_error("Unable to create file mapping handle");
 
 	if(!DuplicateHandle(GetCurrentProcess(), local.memory, process, &remote_memory, 0, FALSE, DUPLICATE_SAME_ACCESS))
 		win32_error("Unable to duplicate file mapping handle");
 
-	shared = (Shared *)MapViewOfFile(local.memory, FILE_MAP_ALL_ACCESS, 0, 0, 0x1000);
+	shared = (Shared *)MapViewOfFile(local.memory, FILE_MAP_ALL_ACCESS, 0, 0, Shared::mapping_size);
 
 	if(!shared)
 		win32_error("Unable to map view of file");

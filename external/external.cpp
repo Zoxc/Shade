@@ -1,6 +1,7 @@
 #include "external.hpp"
 #include "shared.hpp"
 #include "d3.hpp"
+#include "ui.hpp"
 
 extern "C" void ctors();
 
@@ -13,6 +14,11 @@ namespace Shade
 		typedef HRESULT (__stdcall *d3d_present_t)(IDirect3DDevice9 *device, const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion);
 		
 		DWORD last;
+		
+		void set_error(Error::Type error)
+		{
+			shared->error_type = error;
+		}
 		
 		void tick()
 		{
@@ -27,14 +33,27 @@ namespace Shade
 				
 				ResetEvent(shared->event_end);
 				
+				heap.reset();
+				
 				switch(shared->call_type)
 				{
 					case Call::Continue:
 						goto exit_loop;
 						
+					case Call::ListUI:
+						list_ui();
+						break;
+						
 					case Call::Dummy:
 						break;
 				}
+				
+				shared->result.num = 1234;
+				
+				if(shared->error_type == Error::Unknown)
+					shared->error_type = Error::None;
+					
+				__sync_synchronize();
 				
 				SetEvent(shared->event_start);
 			}
@@ -58,18 +77,17 @@ namespace Shade
 
 		size_t init(HANDLE memory)
 		{
-			size_t mapping_size = 0x1000;
-			shared = (Shared *)MapViewOfFile(memory, FILE_MAP_ALL_ACCESS, 0, 0, mapping_size);
+			shared = (Shared *)MapViewOfFile(memory, FILE_MAP_ALL_ACCESS, 0, 0, Shared::mapping_size);
 
 			if(!shared)
-				return 1;
+				return GetLastError();
 			
-			heap.setup((void *)(shared + 1), mapping_size - sizeof(Shared));
+			heap.setup((void *)(shared + 1), Shared::mapping_size - sizeof(Shared));
 			
 			HMODULE d3d9 = LoadLibrary("d3d9.dll");
 
 			if(!d3d9)
-				return 2;
+				return GetLastError();
 				
 			shared->d3d_present_offset = (size_t)d3d9 + shared->d3d_present_offset;
 			shared->d3d_present = &d3d_present;
@@ -78,7 +96,7 @@ namespace Shade
 			
 			ctors();
 			
-			return 0;
+			return ERROR_SUCCESS;
 		}
 	};
 };

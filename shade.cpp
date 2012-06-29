@@ -5,6 +5,7 @@
 #include "compiler/disassembler.hpp"
 
 #include <sstream>
+#include <fstream>
 
 void Shade::write(void *remote, const void *local, size_t size)
 {
@@ -18,7 +19,7 @@ void Shade::read(const void *remote, void *local, size_t size)
 		win32_error("Unable to read remote memory");
 }
 
-void Shade::win32_error(DWORD err_no, std::string message)
+std::string Shade::win32_error_code(DWORD err_no)
 {
 	char *msg_buffer;
 
@@ -26,11 +27,14 @@ void Shade::win32_error(DWORD err_no, std::string message)
 	
 	std::stringstream msg;
 
-	msg << message << "\nError #" << err_no << ": " << msg_buffer;
+	msg << "Error #" << err_no << ": " << msg_buffer;
 
-	LocalFree(msg_buffer);
+	return msg.str();
+}
 
-	error(msg.str());
+void Shade::win32_error(DWORD err_no, std::string message)
+{
+	error(message + "\n" + win32_error_code(err_no));
 }
 
 void Shade::win32_error(std::string message)
@@ -41,7 +45,7 @@ void Shade::win32_error(std::string message)
 void Shade::error(std::string message)
 {
 	auto result = new d3c_error;
-
+	
 	result->message = strdup(message.c_str());
 
 	throw result;
@@ -70,12 +74,55 @@ void Shade::init()
 	resume_process();
 }
 
-void Shade::remote_call(Call::Type type)
+Shade::Error::Type Shade::remote_call(Call::Type type)
 {
+	shared->error_type = Error::None;
 	shared->call_type = type;
+	shared->result.num = 12;
+
+	MemoryBarrier();
+
 	signal_event(local.end);
 	wait_event(local.start);
 	reset_event(local.start);
+	
+	if(type == Call::Continue)
+		return Error::None;
+
+	if(shared->error_type == Error::OutOfMemory)
+	{
+		TerminateProcess(process, 1);
+		error("Remote code ran out of memory");
+	} else if(shared->error_type == Error::Unknown)
+		error("Unknown error while executing remote call");
+
+	return shared->error_type;
+}
+
+static bool write_ui = false;
+
+static void list_element(Shade::Remote::UIElement *element, std::ofstream &fs, std::ofstream &fsv)
+{
+	std::stringstream out;
+	
+	out << "UIElement " << element->ptr << "\n\t Hash: " << element->hash << "\n\t Name: " << element->name->c_str() << "\n\t Visible: " << (element->visible ? "True" : "False") << "\n\t Virtual Table: " << element->vtable << "\n";
+
+	if(element->text)
+		out << "\t Text: " << element->text->c_str() << "\n";
+	
+	fs << out.str();
+
+	if(element->visible)
+		fsv << out.str();
+	
+	if(!element->skipped_children)
+	{
+
+		for(auto i = element->children.begin(); i != element->children.end(); ++i)
+		{
+			list_element(*i, fs, fsv);
+		}
+	}
 }
 
 void Shade::loop(d3c_tick_t tick_func)
@@ -83,6 +130,29 @@ void Shade::loop(d3c_tick_t tick_func)
 	while(true)
 	{
 		remote_call(Call::Continue);
+		
+
+		{
+			printf("Listing UI\n");
+
+			auto list_error = remote_call(Call::ListUI);
+
+			if(list_error == Error::NotFound)
+				printf("No UI elements found\n");
+			else if(list_error == Error::None && !write_ui)
+			{
+				std::ofstream fs;
+				std::ofstream fsv;
+				fs.open("ui-dump.txt");
+				fsv.open("ui-visible.txt");
+
+				list_element(shared->result.ui_root, fs, fsv);
+
+				fs.close();
+				fsv.close();
+				write_ui = true;
+			}
+		}
 
 		tick_func();
 	}

@@ -211,14 +211,8 @@ skip_random:
 
 	CloseHandle(init_thread);
 
-	if(init_result != 0)
-	{
-		std::stringstream msg;
-
-		msg << "Init function failed with error " << init_result;
-
-		error(msg.str());
-	}
+	if(init_result != ERROR_SUCCESS)
+		error("Init function failed.\n" +  win32_error_code(init_result));
 
 	detour((void *)shared->d3d_present_offset, shared->d3d_present, shared->d3d_present);
 }

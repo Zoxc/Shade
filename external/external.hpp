@@ -2,13 +2,18 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
+#include <cstdint>
 
 namespace Shade
 {
+	namespace Error
+	{
+		enum Type;
+	};
+
 	namespace Remote
 	{
-		typedef unsigned int size_t;
-
+		void set_error(Error::Type error);
 		size_t init();
 	};
 };

@@ -9,6 +9,8 @@
 
 static void *dr;
 
+std::ofstream Shade::code_log;
+
 void Shade::detour(void *address, void *target, void *&trampoline)
 {
 	const size_t instr_max = 17;
@@ -76,6 +78,8 @@ void Shade::detour(void *address, void *target, void *&trampoline)
 void Shade::init_disassembler()
 {
 	disassemble_set_syntax(DR_DISASM_INTEL);
+
+	code_log.open("code_log.txt");
 }
 
 static void print_instr(byte *address, instr_t *instr)
@@ -84,7 +88,7 @@ static void print_instr(byte *address, instr_t *instr)
 
 	instr_disassemble_to_buffer(0, instr, buffer, 0x100);
 
-	std::cout << "0x" << (void *)address << " " << buffer << std::endl;
+	Shade::code_log << "0x" << (void *)address << " " << buffer << std::endl;
 }
 
 void Shade::disassemble_code(void *code, void *target, size_t size)
