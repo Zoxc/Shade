@@ -40,6 +40,9 @@ void verify_offsets()
 	
 	// Referenced by 0x9D5820 - 1.0.3.10235
 	verify_offset(UIText, text, 0xAC8);
+	verify_offset(UIText, text_dup, 0xC34);
+	verify_offset(UIText, state, 0x4E4);
+	verify_offset(UIText, click, 0x54C);
 	
 	verify_offset(UIHashTablePair, value, 0x210);
 }

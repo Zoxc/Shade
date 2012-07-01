@@ -37,11 +37,17 @@ namespace Shade
 		struct UIElement
 		{
 			/* 1.0.3.10235 Vtable types:
-				0x13A2760: UILabel, UIText
-				0x13D4EB8: UIEdit, UIText
-				0x13ED3D8: ?, not UIContainer
-				0x13ED258: ?, not UIContainer
-				0x13D7478: ?, not UIContainer
+				0x13ED3D8: UIShortcut > UIElement
+				0x13ED258: UIDrawHook > UIElement
+				0x13D7478: UIEvent > UIElement
+				0x13D2BD8: Unknown > UIContainer
+				0x13E25B8: UIButton > UIText
+				0x13A2760: UILabel > UIText
+				0x13D4EB8: UIEdit > UIText
+				0x13EAFF0: UICheckbox > UIText
+				0x13ECFE0: UIScrollbarThumb > UIContainer
+				0x13E8BF0: Unknown > UIContainer
+				0x13EB408: Unknown > UIContainer
 			*/
 			
 			void **vtable;
@@ -61,11 +67,17 @@ namespace Shade
 			uint32_t child_count;
 		};
 		
-		struct UIText
+		struct UIText // size 0xD00?
 		{
 			struct UIContainer container;
-			void *u_0[0x196];
+			void *u_0[29];
+			uint32_t state;
+			void *u_1[25];
+			void (__cdecl *click)();
+			void *u_2[350];
 			const char *text;
+			void *u_3[90];
+			const char *text_dup;
 		};
 		
 		struct UIHashTablePair

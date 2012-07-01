@@ -12,6 +12,7 @@ namespace Shade
 			
 			switch((size_t)element->vtable)
 			{
+				case 0x13E25B8:
 				case 0x13A2760:
 				case 0x13D4EB8:
 					text = true;
