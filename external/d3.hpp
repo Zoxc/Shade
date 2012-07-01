@@ -55,40 +55,44 @@ namespace Shade
 		struct UIContainer
 		{
 			struct UIElement element;
-			void *u_4[8];
+			void *u_0[8];
 			struct UIElement **children;
-			uint32_t u_5;
+			uint32_t u_1;
 			uint32_t child_count;
 		};
 		
 		struct UIText
 		{
 			struct UIContainer container;
-			void *u_6[0x196];
+			void *u_0[0x196];
 			const char *text;
 		};
 		
 		struct UIHashTablePair
 		{
 			struct UIHashTablePair *next;
-			void *u_0;
-			uint64_t key;
-			void *u_1[128];
+			void *u_0; // Always 0?
+			struct UIReference key;
 			struct UIElement *value;
+			void *u_1; // Always 0?
 		};
 		
 		struct UIHashTable
 		{
-			uint32_t u_0[2];
+			void *u_0; // Points to &u_3
+			void *u_1;
 			struct UIHashTablePair **table;
-			void *u_1[13];
+			void *u_2[13];
 			uint32_t mask; // (size in power of 2) - 1
 			uint32_t entries;
+			void *u_3;
 		};
 		
 		struct UIManager
 		{
 			struct UIHashTable *hash_table;
+			void *u_0;
+			struct UIReference u_1[6];
 		};
 		
 		struct ObjectManager

@@ -38,6 +38,7 @@ void verify_offsets()
 	verify_offset(UIContainer, children, 0x460);
 	verify_offset(UIContainer, child_count, 0x468);
 	
+	// Referenced by 0x9D5820 - 1.0.3.10235
 	verify_offset(UIText, text, 0xAC8);
 	
 	verify_offset(UIHashTablePair, value, 0x210);
