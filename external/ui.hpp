@@ -19,6 +19,17 @@ namespace Shade
 			Vector<Ptr<UIElement>> children;
 		};
 		
+		struct UIHandler:
+			public HeapObject
+		{
+			Ptr<UIHandler> next;
+			
+			Ptr<String> name;
+			void *func;
+			uint32_t hash;
+		};
+		
 		void list_ui();
+		void list_ui_handlers();
 	};
 };

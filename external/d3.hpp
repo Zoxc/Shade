@@ -28,11 +28,52 @@ namespace Shade
 			static Value value;
 		};
 		
+		template<class K, class V> struct HashTable
+		{
+			struct Pair
+			{
+				Pair *next;
+				K key;
+				V value;
+			};
+			
+			void *u_0; // Points to &u_3
+			void *u_1;
+			Pair **table;
+			void *u_2[13];
+			uint32_t mask; // (table size in power of 2) - 1
+			uint32_t entries;
+			void *u_3;
+			
+			template<typename func> bool each_pair(func do_for_pair)
+			{
+				for(size_t i = 0; i <= mask; ++i)
+				{
+					Pair *pair = table[i];
+
+					if(pair)
+					{
+						if(!do_for_pair(pair->key, pair->value))
+							return false;
+					}
+				}
+				
+				return true;
+			}
+		};
+		
+		struct UIHandler
+		{
+			const char *name; // Ignored if this is 0
+			uint32_t hash;
+			void (__cdecl *execute)();
+		};
+		
 		struct UIReference
 		{
 			uint64_t hash; 
 			char name[0x200];
-		};
+		} __attribute__((aligned(64)));
 		
 		struct UIElement
 		{
@@ -58,19 +99,19 @@ namespace Shade
 			struct UIReference parent;
 		};
 		
-		struct UIContainer
+		struct UIContainer:
+			public UIElement
 		{
-			struct UIElement element;
 			void *u_0[8];
 			struct UIElement **children;
 			uint32_t u_1;
 			uint32_t child_count;
 		};
 		
-		struct UIText // size 0xD00?
+		struct UIText: // size 0xD00?
+			public UIContainer
 		{
-			struct UIContainer container;
-			void *u_0[29];
+			void *u_0[30];
 			uint32_t state;
 			void *u_1[25];
 			void (__cdecl *click)();
@@ -80,31 +121,16 @@ namespace Shade
 			const char *text_dup;
 		};
 		
-		struct UIHashTablePair
-		{
-			struct UIHashTablePair *next;
-			void *u_0; // Always 0?
-			struct UIReference key;
-			struct UIElement *value;
-			void *u_1; // Always 0?
-		};
-		
-		struct UIHashTable
-		{
-			void *u_0; // Points to &u_3
-			void *u_1;
-			struct UIHashTablePair **table;
-			void *u_2[13];
-			uint32_t mask; // (size in power of 2) - 1
-			uint32_t entries;
-			void *u_3;
-		};
-		
+		typedef HashTable<UIReference, UIElement *> UIElementMap;
+		typedef HashTable<uint32_t, UIHandler *> UIHandlerMap;
+
 		struct UIManager
 		{
-			struct UIHashTable *hash_table;
+			UIElementMap *element_map;
 			void *u_0;
 			struct UIReference u_1[6];
+			void *u_2[1688];
+			UIHandlerMap *handler_map;
 		};
 		
 		struct ObjectManager
@@ -125,6 +151,15 @@ namespace Shade
 		};
 		
 		static constexpr auto &ui_reference_list = Offset<UIReference *, 0x158E3B8>::value.ptr; // 1.0.3.10235
+		
+		/* ui_handler_list
+			1.0.3.10235
+			setup_ui_handler_list - 0x1326620: Initializes this array
+			setup_ui_manager_handler_list - 0xB52120: populates this list into UIManager::handler_map
+			get_ui_handler_from_string - 0xB51F10: maps a string to UIHandler::execute using UIManager::handler_map
+		*/
+		static constexpr auto &ui_handler_list = Offset<UIHandler *, 0x15924E0>::value.ptr; 
+		static const size_t ui_handler_list_size = 920; // referenced in setup_ui_manager_handler_list
 		
 		static constexpr auto &object_manager = Offset<ObjectManager **, 0x15A1BEC>::value.ptr; // 1.0.3.10235
 		

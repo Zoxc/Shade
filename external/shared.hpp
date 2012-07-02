@@ -10,6 +10,7 @@ namespace Shade
 		{
 			Continue,
 			ListUI,
+			ListUIHandlers,
 			Dummy
 		};
 	};
@@ -41,6 +42,7 @@ namespace Shade
 		bool triggered;
 		struct {
 			Ptr<Remote::UIElement> ui_root;
+			Ptr<List<Remote::UIHandler>> ui_handlers;
 			size_t num;
 			void *ptr;
 		} result;

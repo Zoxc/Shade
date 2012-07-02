@@ -22,9 +22,12 @@ template<class Struct, class FieldType, FieldType Struct::*field, size_t found_o
 void verify_offsets()
 {
 	verify_offset(ObjectManager, ui_manager, 0x924);
-
-	verify_offset(UIHashTable, table, 0x8);
-	verify_offset(UIHashTable, mask, 0x40);
+	
+	verify_offset(UIManager, element_map, 0);
+	verify_offset(UIManager, handler_map, 0x2698);
+	
+	verify_offset(UIElementMap, table, 0x8);
+	verify_offset(UIElementMap, mask, 0x40);
 
 	verify_offset(UIReference, name, 0x8);
 	
@@ -44,5 +47,5 @@ void verify_offsets()
 	verify_offset(UIText, state, 0x4E4);
 	verify_offset(UIText, click, 0x54C);
 	
-	verify_offset(UIHashTablePair, value, 0x210);
+	verify_offset(UIElementMap::Pair, value, 0x210);
 }

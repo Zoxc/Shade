@@ -131,15 +131,15 @@ void Shade::loop(d3c_tick_t tick_func)
 	{
 		remote_call(Call::Continue);
 		
-
+		if(!write_ui)
 		{
+			write_ui = true;
+
 			printf("Listing UI\n");
 
-			auto list_error = remote_call(Call::ListUI);
+			auto call_error = remote_call(Call::ListUI);
 
-			if(list_error == Error::NotFound)
-				printf("No UI elements found\n");
-			else if(list_error == Error::None && !write_ui)
+			if(call_error == Error::None)
 			{
 				std::ofstream fs;
 				std::ofstream fsv;
@@ -150,7 +150,23 @@ void Shade::loop(d3c_tick_t tick_func)
 
 				fs.close();
 				fsv.close();
-				write_ui = true;
+			}
+
+			printf("Listing UI Handlers\n");
+
+			call_error = remote_call(Call::ListUIHandlers);
+
+			if(call_error == Error::None)
+			{
+				std::ofstream fs;
+				fs.open("ui-handlers.txt");
+				
+				for(auto i = shared->result.ui_handlers->begin(); i != shared->result.ui_handlers->end(); ++i)
+				{
+					fs << "UIHandler " << "\n\t Hash: " << i().hash << "\n\t Name: " << i().name->c_str() << "\n\t Function: " << i().func << "\n";
+				}
+
+				fs.close();
 			}
 		}
 

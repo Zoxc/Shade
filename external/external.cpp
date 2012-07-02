@@ -44,6 +44,10 @@ namespace Shade
 						list_ui();
 						break;
 						
+					case Call::ListUIHandlers:
+						list_ui_handlers();
+						break;
+						
 					case Call::Dummy:
 						break;
 				}

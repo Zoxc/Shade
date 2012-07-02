@@ -88,5 +88,28 @@ namespace Shade
 			
 			shared->result.ui_root = copy_element(d3_root);
 		}
+		
+		void list_ui_handlers()
+		{
+			auto handlers = new List<UIHandler>;
+			
+			for(size_t i = 0; i < D3::ui_handler_list_size; ++i)
+			{
+				auto d3_handler = &D3::ui_handler_list[i];
+				
+				if(!d3_handler->name)
+					continue;
+				
+				auto handler = new UIHandler;
+				
+				handler->func = d3_handler->execute;
+				handler->hash = d3_handler->hash;
+				handler->name = new String(d3_handler->name);
+				
+				handlers->append(handler);
+			}
+			
+			shared->result.ui_handlers = handlers;
+		}
 	};
 };
