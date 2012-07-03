@@ -62,18 +62,21 @@ namespace Shade
 			}
 		};
 		
-		struct UIHandler
-		{
-			const char *name; // Ignored if this is 0
-			uint32_t hash;
-			void (__cdecl *execute)();
-		};
-		
 		struct UIReference
 		{
 			uint64_t hash; 
 			char name[0x200];
-		} __attribute__((aligned(64)));
+		} __attribute__((aligned(8)));
+		
+		struct UIHandler
+		{
+			const char *name; // Ignored if this is 0
+			uint32_t hash;
+			
+			typedef void (*func_t)(UIReference *element);
+			
+			func_t execute;
+		};
 		
 		struct UIElement
 		{
@@ -114,7 +117,7 @@ namespace Shade
 			void *u_0[30];
 			uint32_t state;
 			void *u_1[25];
-			void (__cdecl *click)();
+			UIHandler::func_t click;
 			void *u_2[350];
 			const char *text;
 			void *u_3[90];
