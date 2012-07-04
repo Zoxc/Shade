@@ -105,23 +105,27 @@ static void list_element(Shade::Remote::UIElement *element, std::ofstream &fs, s
 {
 	std::stringstream out;
 	
-	out << "UIElement " << element->ptr << "\n\t Hash: " << element->hash << "\n\t Name: " << element->name->c_str() << "\n\t Visible: " << (element->visible ? "True" : "False") << "\n\t Virtual Table: " << element->vtable << "\n";
-
+	out << "UIElement " << element->ptr << "\n\t Hash: " << element->hash << "\n\t Name: " << element->name->c_str() << "\n\t Visible: " << (element->visible ? "True" : "False") << "\n\t Virtual Table: " << element->v_table << "\n";
+	
 	if(element->text)
 		out << "\t Text: " << element->text->c_str() << "\n";
+	
+	if(element->rect)
+	{
+		out << "\t Left: " << element->rect->left << "\n"
+			<< "\t Top: " << element->rect->top << "\n"
+			<< "\t Right: " << element->rect->right << "\n"
+			<< "\t Bottom: " << element->rect->bottom << "\n";
+	}
 	
 	fs << out.str();
 
 	if(element->visible)
 		fsv << out.str();
 	
-	if(!element->skipped_children)
+	for(auto i = element->children.begin(); i != element->children.end(); ++i)
 	{
-
-		for(auto i = element->children.begin(); i != element->children.end(); ++i)
-		{
-			list_element(*i, fs, fsv);
-		}
+		list_element(*i, fs, fsv);
 	}
 }
 

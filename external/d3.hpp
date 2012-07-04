@@ -62,6 +62,37 @@ namespace Shade
 			}
 		};
 		
+		/* UIEvent
+			1.0.3.10235
+			MainWndProc - 0x94A8E0: Setups this structure
+			dispatch_ui_event - 0x94A8E0: Dispatches the event
+		*/
+		struct UIEvent
+		{
+			enum Type
+			{
+				LeftMouseDown = 6,
+				LeftMouseUp = 7,
+				LeftMouseDblClick = 8,
+				
+				MiddleMouseDown = 11,
+				MiddleMouseUp = 12,
+				MiddleMouseDblClick = 13,
+				
+				RightMouseDown = 16,
+				RightMouseUp = 17,
+				RightMouseDblClick = 18,
+				
+			};
+			
+			Type type;
+			
+			void *u_0[6];
+			int x;
+			int y;
+			void *u_1[9];
+		};
+
 		struct UIReference
 		{
 			uint64_t hash; 
@@ -78,68 +109,102 @@ namespace Shade
 			func_t execute;
 		};
 		
-		struct UIElement
+		struct UIComponent;
+		
+		struct UIComponentVirtualTable
+		{
+			void *u_0[7];
+			void (__thiscall *event)(UIComponent *self, int *, UIEvent *event);
+		};
+		
+		typedef int sound_t; // -1 is no sound
+		
+		struct UIRect
+		{
+			float left;
+			float top;
+			float right;
+			float bottom;
+		};
+		
+		struct UIComponent
 		{
 			/* 1.0.3.10235 Vtable types:
-				0x13ED3D8: UIShortcut > UIElement
-				0x13ED258: UIDrawHook > UIElement
-				0x13D7478: UIEvent > UIElement
+				0x13ED3D8: UIShortcut > UIComponent
+				0x13ED258: UIDrawHook > UIComponent
+				0x13D7478: UIEvent > UIComponent
 				0x13D2BD8: Unknown > UIContainer
-				0x13E25B8: UIButton > UIText
-				0x13A2760: UILabel > UIText
-				0x13D4EB8: UIEdit > UIText
-				0x13EAFF0: UICheckbox > UIText
+				0x13E25B8: UIButton > UIControl
+				0x13A2760: UILabel > UIControl
+				0x13D4EB8: UIEdit > UIControl
+				0x13EAFF0: UICheckbox > UIControl
 				0x13ECFE0: UIScrollbarThumb > UIContainer
 				0x13E8BF0: Unknown > UIContainer
 				0x13EB408: Unknown > UIContainer
 			*/
 			
-			void **vtable;
-			void *u_0[9];
+			UIComponentVirtualTable *v_table;
+			void *u_0;
+			UIHandler::func_t handler_0;
+			void *u_1[1];
+			UIHandler::func_t handler_1;
+			void *u_2[2];
+			sound_t sound_0;
+			void *u_3[2];
 			uint32_t visible; 
-			uint32_t u_1;
-			struct UIReference self;
-			struct UIReference parent;
+			uint32_t u_4; // Padding?
+			UIReference self;
+			UIReference parent;
 		};
 		
 		struct UIContainer:
-			public UIElement
+			public UIComponent
 		{
 			void *u_0[8];
-			struct UIElement **children;
+			UIComponent **children;
 			uint32_t u_1;
 			uint32_t child_count;
 		};
 		
-		struct UIText: // size 0xD00?
+		struct UIControl: // size 0xD00?
 			public UIContainer
 		{
 			void *u_0[30];
 			uint32_t state;
-			void *u_1[25];
+			void *u_1[1];
+			uint32_t flags; // Controls which UIRect is used
+			void *u_2[6];
+			UIRect rect_0;
+			void *u_3[13];
 			UIHandler::func_t click;
-			void *u_2[350];
+			void *u_4[323];
+			UIRect rect_1;
+			void *u_5[12];
+			UIRect rect_2;
+			void *u_6[7];
 			const char *text;
-			void *u_3[90];
+			void *u_7[90];
 			const char *text_dup;
 		};
 		
-		typedef HashTable<UIReference, UIElement *> UIElementMap;
+		typedef HashTable<UIReference, UIComponent *> UIComponentMap;
 		typedef HashTable<uint32_t, UIHandler *> UIHandlerMap;
 
 		struct UIManager
 		{
-			UIElementMap *element_map;
-			void *u_0;
-			struct UIReference u_1[6];
+			UIComponentMap *component_map;
+			void *u_0; // Padding?
+			UIReference u_1[6];
 			void *u_2[1688];
 			UIHandlerMap *handler_map;
 		};
 		
 		struct ObjectManager
 		{
-			void *u_0[585];
-			struct UIManager *ui_manager;
+			void *u_0[7];
+			int count_0; // Fires UIComponent::handler_1 count_0 times in 0xAE27A0 - 1.0.3.10235
+			void *u_1[577];
+			UIManager *ui_manager;
 		};
 		
 		enum UIReferenceIndices
@@ -166,7 +231,17 @@ namespace Shade
 		
 		static constexpr auto &object_manager = Offset<ObjectManager **, 0x15A1BEC>::value.ptr; // 1.0.3.10235
 		
-		static constexpr auto &get_UI_element = Offset<UIElement *(__cdecl *)(UIReference *reference), 0x93F400>::value.ptr; // 1.0.3.10235
+		static constexpr auto &get_ui_component = Offset<UIComponent *(__cdecl *)(UIReference *reference), 0x93F400>::value.ptr; // 1.0.3.10235
+		
+		/* extract_ui_rect
+			Extracts the virtual coordinates of the UIControl into the rect parameter
+		*/
+		static constexpr auto &extract_ui_rect = Offset<void (__thiscall *)(UIControl *element, UIRect *rect), 0xA85B80>::value.ptr; // 1.0.3.10235
+		
+		/* map_ui_rect
+			Maps the virtual coordinates passed in 'in' and maps it to window coordinates which is stored in 'out'
+		*/
+		static constexpr auto &map_ui_rect = Offset<void (*)(UIRect *in, UIRect *out, bool x_axis, bool y_axis), 0xA8A230>::value.ptr; // 1.0.3.10235
 		
 		static void init();
 	};

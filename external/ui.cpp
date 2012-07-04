@@ -6,85 +6,83 @@ namespace Shade
 {
 	namespace Remote
 	{
-		Ptr<String> get_text(D3::UIElement *element)
+		void do_control(UIElement *element, D3::UIComponent *component)
 		{
-			bool text;
-			
-			switch((size_t)element->vtable)
+			switch((size_t)component->v_table)
 			{
 				case 0x13E25B8:
 				case 0x13A2760:
 				case 0x13D4EB8:
-					text = true;
 					break;
 					
 				default:
-					text = false;
+					return;
 			}
 			
-			if(text)
-			{
-				auto text_str = ((D3::UIText *)element)->text;
-				
-				if(text_str)
-				{
-					shared->result.num = *text_str;
-					return new String(text_str);
-				}
-			}
+			auto control = (D3::UIControl *)component;
 			
-			return nullptr;
+			if(control->text)
+				element->text = new String(control->text);
+			
+			auto rect = new UIRect;
+			
+			D3::UIRect d3_rect;
+			
+			D3::extract_ui_rect(control, &d3_rect);
+			D3::map_ui_rect(&d3_rect, &d3_rect, true, true);
+			
+			rect->left = d3_rect.left;
+			rect->top = d3_rect.top;
+			rect->right = d3_rect.right;
+			rect->bottom = d3_rect.bottom;
+			
+			element->rect = rect;
 		}
 		
-		UIElement *copy_element(D3::UIElement *d3_element);
+		UIElement *copy_element(D3::UIComponent *component);
 		
-		void copy_element_children(UIElement *element, D3::UIElement *d3_element)
+		void do_container(UIElement *element, D3::UIComponent *component)
 		{
-			switch((size_t)d3_element->vtable)
+			switch((size_t)component->v_table)
 			{
 				case 0x13ED3D8:
 				case 0x13ED258:
 				case 0x13D7478:
-					element->skipped_children = true;
-					break;
+					return;
 					
 				default:
-					element->skipped_children = false;
+					break;
 			}
+		
+			auto container = (D3::UIContainer *)component;
 			
-			if(!element->skipped_children)
-			{
-				auto container = (D3::UIContainer *)d3_element;
-				
-				element->children.allocate(container->child_count);
-				
-				for(size_t i = 0; i < container->child_count; ++i)
-					element->children[i] = copy_element(container->children[i]);
-			}
+			element->children.allocate(container->child_count);
+			
+			for(size_t i = 0; i < container->child_count; ++i)
+				element->children[i] = copy_element(container->children[i]);
 		}
 		
-		UIElement *copy_element(D3::UIElement *d3_element)
+		UIElement *copy_element(D3::UIComponent *component)
 		{
 			auto element = new UIElement;
 			
-			element->ptr = d3_element;
-			element->name = new String(d3_element->self.name, sizeof(D3::UIReference::name));
+			element->ptr = component;
+			element->name = new String(component->self.name, sizeof(D3::UIReference::name));
 			
-			element->text = get_text(d3_element);
+			element->visible = component->visible != 0;
+			element->hash = component->self.hash;
 			
-			element->visible = d3_element->visible != 0;
-			element->hash = d3_element->self.hash;
+			element->v_table = component->v_table;
 			
-			element->vtable = d3_element->vtable;
-			
-			copy_element_children(element, d3_element);
+			do_control(element, component);
+			do_container(element, component);
 			
 			return element;
 		}
 		
 		void list_ui()
 		{
-			auto d3_root = D3::get_UI_element(&D3::ui_reference_list[D3::UIReferenceList_Root]);
+			auto d3_root = D3::get_ui_component(&D3::ui_reference_list[D3::UIReferenceList_Root]);
 			
 			shared->result.ui_root = copy_element(d3_root);
 		}
