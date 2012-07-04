@@ -64,7 +64,7 @@ namespace Shade
 		
 		/* UIEvent
 			1.0.3.10235
-			MainWndProc - 0x94A8E0: Setups this structure
+			MainWndProc - 0x80E5F0: Setups this structure
 			dispatch_ui_event - 0x94A8E0: Dispatches the event
 		*/
 		struct UIEvent
