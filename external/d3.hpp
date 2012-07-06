@@ -51,10 +51,11 @@ namespace Shade
 				V value;
 			};
 			
-			void *u_0; // Points to &HashTable + 1 in UI hash tables
+			void *u_0; // Points to &HashTable + 1 in UI hash tables. User-data field?
 			void *u_1;
 			Pair **table;
-			void *u_2[2];
+			void *u_2;
+			uint32_t table_size;
 			Pair *inline_table[inline_slots];
 			void *u_3;
 			uint32_t mask; // (table size in power of 2) - 1
