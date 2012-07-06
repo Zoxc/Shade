@@ -199,7 +199,7 @@ void Shade::loop(d3c_tick_t tick_func)
 				
 				for(auto i = shared->data.acds->begin(); i != shared->data.acds->end(); ++i)
 				{
-					fs << "ACD " << "\n\t Ptr: " << i().ptr << "\n\t Id: " << i().id << "\n\t OwnerId: " << i().actor_id << "\n\t Name: " << i().name->c_str() << "\n";
+					fs << "ACD " << "\n\t Ptr: " << i().ptr << "\n\t Id: " << i().id << "\n\t OwnerId: " << i().owner_id << "\n\t Name: " << i().name->c_str() << "\n";
 				}
 
 				fs.close();

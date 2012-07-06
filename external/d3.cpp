@@ -41,7 +41,7 @@ void verify_offsets()
 	verify_offset(ActorCommonData, radius_type, 0x21D);
 	verify_offset(ActorCommonData, scaled_radius, 0x238);
 	
-	// Referenced by AssetList::asset_size
+	// Referenced by ObjectList::object_size
 	verify_size(ActorCommonData, 0x2D0);
 	
 	verify_offset(ActorMovement, current_speed, 0xC);
@@ -67,22 +67,25 @@ void verify_offsets()
 	verify_offset(Actor, velocity, 0x3A0);
 	verify_offset(Actor, frame, 0x418);
 	
-	// Referenced by AssetList::asset_size
+	// Referenced by ObjectList::object_size
 	verify_size(Actor, 0x428);
 	
 	verify_offset(AttributeMap, table, 0x8);
 	verify_offset(AttributeMap, mask, 0x418);
 
-	// Referenced by AssetList::asset_size
-	verify_size(AttributeAsset, 0x180);
+	// Referenced by ObjectList::object_size
+	verify_size(Attribute, 0x180);
 	
-	verify_offset(AttributeAsset, attribute_map, 0x10);
+	verify_offset(Attribute, attribute_map, 0x10);
 	
-	verify_offset(AssetList, asset_size, 0x104);
-	verify_offset(AssetList, asset_count, 0x108);
-	verify_offset(AssetList, assets, 0x148);
+	verify_offset(ObjectList, object_size, 0x104);
 	
-	verify_offset(GameData, asset_lists, 0x390);
+	// Referenced by iterate_actor_objects
+	verify_offset(ObjectList, total_count, 0x108);
+	verify_offset(ObjectList, slots, 0x148);
+	verify_offset(ObjectList, slot_size_shift, 0x18C);
+	
+	verify_offset(GameData, object_lists, 0x390);
 	
 	verify_offset(ObjectManager, count_0, 0x1C);
 	verify_offset(ObjectManager, lights, 0x8A4);

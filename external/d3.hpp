@@ -233,9 +233,14 @@ namespace Shade
 			float array[size];
 		};
 		
-		struct ActorCommonData
+		struct BaseObject
 		{
-			guid_t self_id;
+			guid_t id;
+		};
+		
+		struct ActorCommonData:
+			public BaseObject
+		{
 			char name[0x80];
 			void *u_84;
 			guid_t guid_0;
@@ -295,9 +300,9 @@ namespace Shade
 			float direction;
 		};
 		
-		struct Actor
+		struct Actor:
+			public BaseObject
 		{
-			guid_t self_id;
 			guid_t common_data_id;
 			char name[0x80];
 			guid_t sno_id;
@@ -348,9 +353,9 @@ namespace Shade
 		
 		typedef HashTable<uint32_t, uint32_t, 0x100> AttributeMap;
 		
-		struct AttributeAsset
+		struct Attribute:
+			public BaseObject
 		{
-			guid_t guid_0;
 			uint32_t u_0[3];
 			AttributeMap *attribute_map;
 			void *u_1; // (size_t)attribute_map + 0x428 - Probably a subfield pointer
@@ -358,27 +363,41 @@ namespace Shade
 			void *u_2[89];
 		};
 		
-		struct AssetList
+		struct ObjectList
 		{
 			char type[252];
-			void *u_0[2];
-			size_t asset_size;
-			size_t asset_count;
-			uint32_t u_1[2];
+			void *u_FC;
+			size_t slot_size;
+			size_t object_size;
+			size_t total_count;
+			uint32_t u_10C[2];
 			LinkedList<uint32_t> list_0;
 			void *u_2; // Points to &u_3
 			void *u_3[9];
-			void **assets;
+			BaseObject **slots; // Points to an array (of slot_size) of pointers to object arrays (of slot_size)
+			void *u_14C[16];
+			uint32_t slot_size_shift; // 1 << slot_size_shift == slot_size
 			
-			template<typename Asset, typename F> void each_asset(F func)
+			template<typename T, typename F> void each_object(F func)
 			{
-				size_t current = (size_t)*assets;
+				size_t count = 0;
 				
-				for(size_t i = 0; i < asset_count; ++i)
+				for(size_t j = 0; j < slot_size; ++j)
 				{
-					func((Asset *)current);
+					auto array = static_cast<T *>(slots[j]);
 					
-					current += asset_size;
+					for(size_t i = 0; i < slot_size; ++i)
+					{
+						auto current = &array[i];
+						
+						if(current->id != -1)
+							func(current);
+						
+						count++;
+						
+						if(count >= total_count)
+							return;
+					}
 				}
 			}
 		};
@@ -386,15 +405,15 @@ namespace Shade
 		struct GameData
 		{
 			void *u_0[228];
-			LinkedList<AssetList *> asset_lists;
+			LinkedList<ObjectList *> object_lists;
 			
-			AssetList *get_asset_list(const char *type)
+			ObjectList *get_object_list(const char *type)
 			{
-				auto node = asset_lists.first;
+				auto node = object_lists.first;
 				
 				while(node)
 				{
-					if(strncmp(type, node->value->type, sizeof(AssetList::type)) == 0)
+					if(strncmp(type, node->value->type, sizeof(ObjectList::type)) == 0)
 						return node->value;
 					
 					node = node->next;
@@ -420,20 +439,20 @@ namespace Shade
 			void *u_0[7];
 			int count_0; // Fires UIComponent::handler_1 count_0 times in 0xAE27A0 - 1.0.3.10235
 			void *u_8[545];
-			AssetList *lights;
-			AssetList *cutscenes;
+			ObjectList *lights;
+			ObjectList *cutscenes;
 			void *u_8AC;
-			AssetList *actors;
+			ObjectList *actors;
 			void *u_8B4[6];
-			AssetList *particle_systems;
+			ObjectList *particle_systems;
 			void *u_8D0[2];
-			AssetList *ambient_sounds;
+			ObjectList *ambient_sounds;
 			void *u_8DC[6];
-			AssetList *scences;
+			ObjectList *scences;
 			void *u_8F8[11];
 			UIManager *ui_manager;
 			void *u_928;
-			AssetList *worlds;
+			ObjectList *worlds;
 		};
 		
 		static constexpr auto &ui_reference_list = Offset<UIReference *, 0x158E3B8>::value.ptr; // 1.0.3.10235
@@ -468,6 +487,14 @@ namespace Shade
 			Referenced in start of 0x9A62E0
 		*/
 		static constexpr auto &game_data = Offset<GameData **, 0x15A2EA4>::value.ptr;
+		
+		/* iterate_actor_objects
+			1.0.3.10235
+			'index' should be set to -1 when starting.
+			Increments 'index' and returns the asset in the 'asset' parameter and as the return value.
+			Returns 0 when 'index' is out of bounds.
+		*/
+		static constexpr auto &iterate_actor_objects = Offset<Actor *(__thiscall *)(ObjectList *object_list, short *index, Actor **actor), 0x9E58B0>::value.ptr;
 		
 		static constexpr auto &get_ui_component = Offset<UIComponent *(__cdecl *)(UIReference *reference), 0x93F400>::value.ptr; // 1.0.3.10235
 		

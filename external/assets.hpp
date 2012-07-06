@@ -11,7 +11,7 @@ namespace Shade
 			void *ptr;
 			Ptr<String> name;
 			size_t id;
-			size_t actor_id;
+			size_t owner_id;
 			
 			Ptr<ActorCommonData> next;
 		};
