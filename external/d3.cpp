@@ -23,6 +23,17 @@ template<class Struct, class FieldType, FieldType Struct::*field, size_t found_o
 
 void verify_offsets()
 {
+	verify_offset(AttributeMap, table, 0x8);
+	verify_offset(AttributeMap, mask, 0x418);
+
+	verify_offset(AttributeAsset, attribute_map, 0x10);
+	
+	verify_offset(AssetList, asset_size, 0x104);
+	verify_offset(AssetList, asset_count, 0x108);
+	verify_offset(AssetList, assets, 0x148);
+	
+	verify_offset(GameData, asset_lists, 0x390);
+	
 	verify_offset(ObjectManager, count_0, 0x1C);
 	verify_offset(ObjectManager, ui_manager, 0x924);
 	
@@ -34,6 +45,13 @@ void verify_offsets()
 	
 	verify_size(UIReference, 0x208);
 	verify_offset(UIReference, name, 0x8);
+	
+	verify_offset(UIComponentVirtualTable, event, 0x1C);
+	verify_offset(UIComponentVirtualTable, mouse_move, 0x30);
+	verify_offset(UIComponentVirtualTable, mouse_enter, 0x44);
+	verify_offset(UIComponentVirtualTable, mouse_leave, 0x48);
+	verify_offset(UIComponentVirtualTable, set_text, 0x84);
+	verify_offset(UIComponentVirtualTable, switch_state, 0x90);
 	
 	verify_offset(UIComponent, self, 0x30);
 	

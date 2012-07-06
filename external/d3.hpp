@@ -28,7 +28,21 @@ namespace Shade
 			static Value value;
 		};
 		
-		template<class K, class V> struct HashTable
+		template<class T> struct LinkedList
+		{
+			struct Node
+			{
+				T value;
+				Node *prev;
+				Node *next;
+			};
+			
+			Node *first;
+			Node *last;
+			size_t count;
+		};
+		
+		template<class K, class V, size_t inline_slots = 10> struct HashTable
 		{
 			struct Pair
 			{
@@ -37,13 +51,14 @@ namespace Shade
 				V value;
 			};
 			
-			void *u_0; // Points to &u_3
+			void *u_0; // Points to &HashTable + 1 in UI hash tables
 			void *u_1;
 			Pair **table;
-			void *u_2[13];
+			void *u_2[2];
+			Pair *inline_table[inline_slots];
+			void *u_3;
 			uint32_t mask; // (table size in power of 2) - 1
 			uint32_t entries;
-			void *u_3;
 			
 			template<typename func> bool each_pair(func do_for_pair)
 			{
@@ -115,9 +130,19 @@ namespace Shade
 		{
 			void *u_0[7];
 			void (__thiscall *event)(UIComponent *self, int *, UIEvent *event);
+			void *u_1[4];
+			void (__thiscall *mouse_move)(UIComponent *self);
+			void *u_2[4];
+			void (__thiscall *mouse_enter)(UIComponent *self);
+			void (__thiscall *mouse_leave)(UIComponent *self);
+			void *u_3[14];
+			void (__thiscall *set_text)(UIComponent *self, const char *text, int);
+			void *u_4[2];
+			void (__thiscall *switch_state)(UIComponent *self, int, int);
 		};
 		
 		typedef int sound_t; // -1 is no sound
+		typedef int guid_t; // -1 is no GUID
 		
 		struct UIRect
 		{
@@ -207,6 +232,63 @@ namespace Shade
 			UIManager *ui_manager;
 		};
 		
+		typedef HashTable<uint32_t, uint32_t, 0x100> AttributeMap;
+		
+		struct AttributeAsset
+		{
+			guid_t guid_0;
+			uint32_t u_0[3];
+			AttributeMap *attribute_map;
+			void *u_1; // (size_t)attribute_map + 0x428 - Probably a subfield pointer
+			guid_t guid_1;
+		};
+		
+		struct AssetList
+		{
+			char type[252];
+			void *u_0[2];
+			size_t asset_size;
+			size_t asset_count;
+			uint32_t u_1[2];
+			LinkedList<uint32_t> list_0;
+			void *u_2; // Points to &u_3
+			void *u_3[9];
+			void **assets;
+			
+			template<typename Asset, typename F> void each_asset(F func)
+			{
+				size_t current = (size_t)*assets;
+				
+				for(size_t i = 0; i < asset_count; ++i)
+				{
+					func((Asset *)current);
+					
+					current += asset_size;
+				}
+			}
+		};
+		
+		struct GameData
+		{
+			void *u_0[228];
+			LinkedList<AssetList *> asset_lists;
+			
+			AssetList *get_asset_list(const char *type)
+			{
+				auto node = asset_lists.first;
+				
+				while(node)
+				{
+					if(strncmp(type, node->value->type, sizeof(AssetList::type)) == 0)
+						return node->value;
+					
+					node = node->next;
+				}
+				
+				return 0;
+			}
+		};
+		
 		enum UIReferenceIndices
 		{
 			UIReferenceList_None,
@@ -230,6 +312,12 @@ namespace Shade
 		static const size_t ui_handler_list_size = 920; // referenced in setup_ui_manager_handler_list
 		
 		static constexpr auto &object_manager = Offset<ObjectManager **, 0x15A1BEC>::value.ptr; // 1.0.3.10235
+		
+		/* game_data
+			1.0.3.10235
+			Referenced in start of 0x9A62E0
+		*/
+		static constexpr auto &game_data = Offset<GameData **, 0x15A2EA4>::value.ptr;
 		
 		static constexpr auto &get_ui_component = Offset<UIComponent *(__cdecl *)(UIReference *reference), 0x93F400>::value.ptr; // 1.0.3.10235
 		
