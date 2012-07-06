@@ -344,6 +344,16 @@ namespace Shade
 			void *u_12[2];
 		};
 		
+		struct AttributeData
+		{
+			uint32_t flags;
+			uint32_t id;
+			uint32_t u_0[3];
+			void *u_1;
+			const char *u_2;
+			const char *name;
+		};
+		
 		typedef HashTable<uint32_t, uint32_t, 0x100> AttributeMap;
 		
 		struct AttributeAsset
@@ -414,6 +424,13 @@ namespace Shade
 		};
 		
 		static constexpr auto &ui_reference_list = Offset<UIReference *, 0x158E3B8>::value.ptr; // 1.0.3.10235
+		
+		/* attribute_list
+			1.0.3.10235
+			setup_attribute_list  - 0x12ED010: Initializes this array
+		*/
+		static constexpr auto &attribute_list_list = Offset<AttributeData *, 0x157E518>::value.ptr; 
+		static const size_t attribute_list_size = 1032;
 		
 		/* ui_handler_list
 			1.0.3.10235
