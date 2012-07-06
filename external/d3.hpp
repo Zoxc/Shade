@@ -365,8 +365,7 @@ namespace Shade
 		
 		struct ObjectList
 		{
-			char type[252];
-			void *u_FC;
+			char type[0x100];
 			size_t slot_size;
 			size_t object_size;
 			size_t total_count;
