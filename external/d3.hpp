@@ -67,10 +67,12 @@ namespace Shade
 				{
 					Pair *pair = table[i];
 
-					if(pair)
+					while(pair)
 					{
 						if(!do_for_pair(pair->key, pair->value))
 							return false;
+							
+						pair = pair->next;
 					}
 				}
 				
