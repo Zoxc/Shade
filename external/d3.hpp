@@ -228,14 +228,6 @@ namespace Shade
 			UIHandlerMap *handler_map;
 		};
 		
-		struct ObjectManager
-		{
-			void *u_0[7];
-			int count_0; // Fires UIComponent::handler_1 count_0 times in 0xAE27A0 - 1.0.3.10235
-			void *u_1[577];
-			UIManager *ui_manager;
-		};
-		
 		template<size_t size> struct Vector
 		{
 			float array[size];
@@ -421,6 +413,27 @@ namespace Shade
 			UIReferenceList_RootTopLayer,
 			UIReferenceList_MainScreen,
 			UIReferenceListEntries,
+		};
+		
+		struct ObjectManager
+		{
+			void *u_0[7];
+			int count_0; // Fires UIComponent::handler_1 count_0 times in 0xAE27A0 - 1.0.3.10235
+			void *u_8[545];
+			AssetList *lights;
+			AssetList *cutscenes;
+			void *u_8AC;
+			AssetList *actors;
+			void *u_8B4[6];
+			AssetList *particle_systems;
+			void *u_8D0[2];
+			AssetList *ambient_sounds;
+			void *u_8DC[6];
+			AssetList *scences;
+			void *u_8F8[11];
+			UIManager *ui_manager;
+			void *u_928;
+			AssetList *worlds;
 		};
 		
 		static constexpr auto &ui_reference_list = Offset<UIReference *, 0x158E3B8>::value.ptr; // 1.0.3.10235

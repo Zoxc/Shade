@@ -85,7 +85,14 @@ void verify_offsets()
 	verify_offset(GameData, asset_lists, 0x390);
 	
 	verify_offset(ObjectManager, count_0, 0x1C);
+	verify_offset(ObjectManager, lights, 0x8A4);
+	verify_offset(ObjectManager, cutscenes, 0x8A8);
+	verify_offset(ObjectManager, actors, 0x8B0);
+	verify_offset(ObjectManager, particle_systems, 0x8CC);
+	verify_offset(ObjectManager, ambient_sounds, 0x8D8);
+	verify_offset(ObjectManager, scences, 0x8F4);
 	verify_offset(ObjectManager, ui_manager, 0x924);
+	verify_offset(ObjectManager, worlds, 0x92C);
 	
 	verify_offset(UIManager, component_map, 0);
 	verify_offset(UIManager, handler_map, 0x2698);
