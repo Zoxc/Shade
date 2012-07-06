@@ -316,6 +316,13 @@ namespace Shade
 		
 		static constexpr auto &object_manager = Offset<ObjectManager **, 0x15A1BEC>::value.ptr; // 1.0.3.10235
 		
+		/* window_not_minimized
+			This variable is set to 0 when the window is minimized and to 1 when it isn't.
+			1.0.3.10235
+			MainWndProc - 0x80E5F0: Referenced in a function called at the end
+		*/
+		static constexpr auto &window_not_minimized = Offset<uint32_t **, 0x157D2AC>::value.ptr;
+		
 		/* game_data
 			1.0.3.10235
 			Referenced in start of 0x9A62E0
