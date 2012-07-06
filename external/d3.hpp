@@ -434,11 +434,18 @@ namespace Shade
 			UIReferenceListEntries,
 		};
 		
+		struct Player
+		{
+			void *u_0[0x2002];
+		};
+		
 		struct ObjectManager
 		{
 			void *u_0[7];
 			int count_0; // Fires UIComponent::handler_1 count_0 times in 0xAE27A0 - 1.0.3.10235
-			void *u_8[545];
+			void *u_8[513];
+			uint32_t *player_offset;
+			void *u_828[31];
 			ObjectList *lights;
 			ObjectList *cutscenes;
 			void *u_8AC;
@@ -453,6 +460,8 @@ namespace Shade
 			UIManager *ui_manager;
 			void *u_928;
 			ObjectList *worlds;
+			void *u_930;
+			void *players;
 		};
 		
 		static constexpr auto &ui_reference_list = Offset<UIReference *, 0x158E3B8>::value.ptr; // 1.0.3.10235

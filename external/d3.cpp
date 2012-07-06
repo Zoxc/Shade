@@ -88,6 +88,7 @@ void verify_offsets()
 	verify_offset(GameData, object_lists, 0x390);
 	
 	verify_offset(ObjectManager, count_0, 0x1C);
+	verify_offset(ObjectManager, player_offset, 0x824);
 	verify_offset(ObjectManager, lights, 0x8A4);
 	verify_offset(ObjectManager, cutscenes, 0x8A8);
 	verify_offset(ObjectManager, actors, 0x8B0);
@@ -96,6 +97,12 @@ void verify_offsets()
 	verify_offset(ObjectManager, scences, 0x8F4);
 	verify_offset(ObjectManager, ui_manager, 0x924);
 	verify_offset(ObjectManager, worlds, 0x92C);
+	
+	// Referenced by get_player_id - 0x97EB70 - 1.0.3.10235
+	verify_size(Player, 0x8008);
+	
+	// Referenced by get_player_id - 0x97EB70 - 1.0.3.10235
+	verify_offset(ObjectManager, players, 0x934);
 	
 	verify_offset(UIManager, component_map, 0);
 	verify_offset(UIManager, handler_map, 0x2698);
