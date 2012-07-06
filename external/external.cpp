@@ -48,11 +48,17 @@ namespace Shade
 						list_ui_handlers();
 						break;
 						
+					case Call::ListRActorAssets:
+						list_actor_assets();
+						break;
+						
+					case Call::ListCommonDataAssets:
+						list_acd_assets();
+						break;
+						
 					case Call::Dummy:
 						break;
 				}
-				
-				shared->result.num = 1234;
 				
 				if(shared->error_type == Error::Unknown)
 					shared->error_type = Error::None;

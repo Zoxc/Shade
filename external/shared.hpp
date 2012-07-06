@@ -1,6 +1,7 @@
 #pragma once
 #include "heap.hpp"
 #include "ui.hpp"
+#include "assets.hpp"
 
 namespace Shade
 {
@@ -11,6 +12,8 @@ namespace Shade
 			Continue,
 			ListUI,
 			ListUIHandlers,
+			ListCommonDataAssets,
+			ListRActorAssets,
 			Dummy
 		};
 	};
@@ -43,9 +46,11 @@ namespace Shade
 		struct {
 			Ptr<Remote::UIElement> ui_root;
 			Ptr<List<Remote::UIHandler>> ui_handlers;
+			Ptr<List<Remote::Actor>> actors;
+			Ptr<List<Remote::ActorCommonData>> acds;
 			size_t num;
 			void *ptr;
-		} result;
+		} data;
 	};
 	
 	extern Shared *shared;

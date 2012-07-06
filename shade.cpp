@@ -78,7 +78,6 @@ Shade::Error::Type Shade::remote_call(Call::Type type)
 {
 	shared->error_type = Error::None;
 	shared->call_type = type;
-	shared->result.num = 12;
 
 	MemoryBarrier();
 
@@ -150,7 +149,7 @@ void Shade::loop(d3c_tick_t tick_func)
 				fs.open("ui-dump.txt");
 				fsv.open("ui-visible.txt");
 
-				list_element(shared->result.ui_root, fs, fsv);
+				list_element(shared->data.ui_root, fs, fsv);
 
 				fs.close();
 				fsv.close();
@@ -165,13 +164,47 @@ void Shade::loop(d3c_tick_t tick_func)
 				std::ofstream fs;
 				fs.open("ui-handlers.txt");
 				
-				for(auto i = shared->result.ui_handlers->begin(); i != shared->result.ui_handlers->end(); ++i)
+				for(auto i = shared->data.ui_handlers->begin(); i != shared->data.ui_handlers->end(); ++i)
 				{
 					fs << "UIHandler " << "\n\t Hash: " << i().hash << "\n\t Name: " << i().name->c_str() << "\n\t Function: " << i().func << "\n";
 				}
 
 				fs.close();
 			}
+			
+			printf("Listing RActors Handlers\n");
+
+			call_error = remote_call(Call::ListRActorAssets);
+
+			if(call_error == Error::None)
+			{
+				std::ofstream fs;
+				fs.open("assets-RActors.txt");
+				
+				for(auto i = shared->data.actors->begin(); i != shared->data.actors->end(); ++i)
+				{
+					fs << "Actor " << "\n\t Ptr: " << i().ptr << "\n\t Id: " << i().id << "\n\t AcdId: " << i().acd_id << "\n\t Name: " << i().name->c_str() << "\n";
+				}
+
+				fs.close();
+			}
+
+			printf("Listing ActorCommonData Handlers\n");
+			call_error = remote_call(Call::ListCommonDataAssets);
+
+			if(call_error == Error::None)
+			{
+				std::ofstream fs;
+				fs.open("assets-ActorCommonData.txt");
+				
+				for(auto i = shared->data.acds->begin(); i != shared->data.acds->end(); ++i)
+				{
+					fs << "ACD " << "\n\t Ptr: " << i().ptr << "\n\t Id: " << i().id << "\n\t OwnerId: " << i().actor_id << "\n\t Name: " << i().name->c_str() << "\n";
+				}
+
+				fs.close();
+			}
+
 		}
 
 		tick_func();

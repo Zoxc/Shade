@@ -84,7 +84,7 @@ namespace Shade
 		{
 			auto d3_root = D3::get_ui_component(&D3::ui_reference_list[D3::UIReferenceList_Root]);
 			
-			shared->result.ui_root = copy_element(d3_root);
+			shared->data.ui_root = copy_element(d3_root);
 		}
 		
 		void list_ui_handlers()
@@ -107,7 +107,7 @@ namespace Shade
 				handlers->append(handler);
 			}
 			
-			shared->result.ui_handlers = handlers;
+			shared->data.ui_handlers = handlers;
 		}
 	};
 };

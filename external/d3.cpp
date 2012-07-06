@@ -17,15 +17,65 @@ template<class Struct, class FieldType, FieldType Struct::*field, size_t found_o
 	static void test() {}
 };
 
+template<class Struct, size_t found_size, size_t expected_size> struct SizeTest
+{
+	static_assert(found_size == expected_size, "Invalid size");
+	
+	static void test() {}
+};
+
 #define verify_offset(struct, field, offset) OffsetTest<Shade::D3::struct, decltype(Shade::D3::struct::field), &Shade::D3::struct::field, __builtin_offsetof(Shade::D3::struct, field), offset>::test()
 
-#define verify_size(struct, size) static_assert(sizeof(Shade::D3::struct) == size, "Invalid size")
+#define verify_size(struct, size) SizeTest<Shade::D3::struct, sizeof(Shade::D3::struct), size>::test()
 
 void verify_offsets()
 {
+	verify_offset(ActorCommonData, guid_0, 0x88);
+	verify_offset(ActorCommonData, acd_gball, 0xB4);
+	verify_offset(ActorCommonData, position, 0xD0);
+	verify_offset(ActorCommonData, default_radius, 0x100);
+	verify_offset(ActorCommonData, world, 0x108);
+	verify_offset(ActorCommonData, owner_id, 0x110);
+	verify_offset(ActorCommonData, attributes, 0x120);
+	verify_offset(ActorCommonData, radius_type, 0x21D);
+	verify_offset(ActorCommonData, radius_type, 0x21D);
+	verify_offset(ActorCommonData, scaled_radius, 0x238);
+	
+	// Referenced by AssetList::asset_size
+	verify_size(ActorCommonData, 0x2D0);
+	
+	verify_offset(ActorMovement, current_speed, 0xC);
+	verify_offset(ActorMovement, scale, 0x1C);
+	verify_offset(ActorMovement, flags, 0x20);
+	verify_offset(ActorMovement, moveable, 0x34);
+	verify_offset(ActorMovement, walkable, 0x38);
+	verify_offset(ActorMovement, moving_to, 0x3C);
+	verify_offset(ActorMovement, position_0, 0x4C);
+	verify_offset(ActorMovement, tp, 0x74);
+	verify_offset(ActorMovement, position_1, 0xA4);
+	verify_offset(ActorMovement, speed_1, 0xB8);
+	verify_offset(ActorMovement, direction, 0x170);
+	
+	verify_offset(Actor, sno_id, 0x88);
+	verify_offset(Actor, default_radius, 0xD0);
+	verify_offset(Actor, position_3, 0x100);
+	verify_offset(Actor, fag_id, 0x120);
+	verify_offset(Actor, position_4, 0x140);
+	verify_offset(Actor, u_7, 0x15C);
+	verify_offset(Actor, position_5, 0x210);
+	verify_offset(Actor, movement, 0x380);
+	verify_offset(Actor, velocity, 0x3A0);
+	verify_offset(Actor, frame, 0x418);
+	
+	// Referenced by AssetList::asset_size
+	verify_size(Actor, 0x428);
+	
 	verify_offset(AttributeMap, table, 0x8);
 	verify_offset(AttributeMap, mask, 0x418);
 
+	// Referenced by AssetList::asset_size
+	verify_size(AttributeAsset, 0x180);
+	
 	verify_offset(AttributeAsset, attribute_map, 0x10);
 	
 	verify_offset(AssetList, asset_size, 0x104);

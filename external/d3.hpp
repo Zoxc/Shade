@@ -161,6 +161,7 @@ namespace Shade
 				0x13ED3D8: UIShortcut > UIComponent
 				0x13ED258: UIDrawHook > UIComponent
 				0x13D7478: UIEvent > UIComponent
+				0x13E3D80: UITimer > UIComponent
 				0x13D2BD8: Unknown > UIContainer
 				0x13E25B8: UIButton > UIControl
 				0x13A2760: UILabel > UIControl
@@ -235,6 +236,114 @@ namespace Shade
 			UIManager *ui_manager;
 		};
 		
+		template<size_t size> struct Vector
+		{
+			float array[size];
+		};
+		
+		struct ActorCommonData
+		{
+			guid_t self_id;
+			char name[0x80];
+			void *u_84;
+			guid_t guid_0;
+			guid_t guid_1;
+			guid_t guid_2;
+			void *u_94[8];
+			guid_t acd_gball;
+			void *u_B8[6];
+			Vector<3> position;
+			void *u_DC[9];
+			float default_radius;
+			void *u_104;
+			guid_t world;
+			void *u_10C;
+			guid_t owner_id;
+			uint32_t item_location;
+			uint32_t item_x;
+			uint32_t item_y;
+			uint32_t attributes;
+			void *u_124[62];
+			char u_21C;
+			char radius_type;
+			char u_21E;
+			char u_21F;
+			void *u_220[6];
+			float scaled_radius;
+			void *u_23C[37];
+		};
+		
+		struct ActorMovement
+		{
+			void **v_table;
+			uint32_t active;
+			float speed_0;
+			float current_speed;
+			void *u_C[3];
+			float scale;
+			uint32_t flags;
+			void *u_24[4];
+			uint32_t moveable;
+			uint32_t walkable;
+			Vector<3> moving_to;
+			void *u_48;
+			Vector<3> position_0;
+			void *u_58[7];
+			Vector<3> tp;
+			void *u_80[9];
+			Vector<3> position_1;
+			void *u_B0[2];
+			float speed_1;
+			void *u_BC[40];
+			guid_t actor_id;
+			uint32_t frame;
+			uint32_t frame_movement;
+			uint32_t prev_frame;
+			void *u_16C;
+			float direction;
+		};
+		
+		struct Actor
+		{
+			guid_t self_id;
+			guid_t common_data_id;
+			char name[0x80];
+			guid_t sno_id;
+			void *u_0;
+			Vector<4> rotation;
+			Vector<3> position_0;
+			float float_0;
+			Vector<3> position_1;
+			float float_1;
+			Vector<3> position_2;
+			void *u_1;
+			float default_radius;
+			void *u_2;
+			guid_t world_id;
+			guid_t guid_0;
+			void *u_3[8];
+			Vector<3> position_3;
+			void *u_4[5];
+			guid_t fag_id;
+			void *u_5[7];
+			Vector<3> position_4;
+			void *u_6[4];
+			uint32_t u_7;
+			void *u_8[44];
+			Vector<3> position_5;
+			void *u_9[89];
+			ActorMovement *movement;
+			float direction;
+			void *u_10[6];
+			Vector<3> velocity;
+			Vector<3> position_6;
+			void *u_11[22];
+			uint64_t alive;
+			uint32_t frame;
+			uint32_t difference;
+			void *u_12[2];
+		};
+		
 		typedef HashTable<uint32_t, uint32_t, 0x100> AttributeMap;
 		
 		struct AttributeAsset
@@ -244,6 +353,7 @@ namespace Shade
 			AttributeMap *attribute_map;
 			void *u_1; // (size_t)attribute_map + 0x428 - Probably a subfield pointer
 			guid_t guid_1;
+			void *u_2[89];
 		};
 		
 		struct AssetList
